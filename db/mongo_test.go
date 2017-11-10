@@ -55,6 +55,18 @@ func TestCreate(t *testing.T) {
 	}
 }
 
+func TestDuplicated(t *testing.T) {
+	dummy := models.NewUser("id", "name", "password", "test@example.com")
+	err := ins.Create("users", dummy)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	err = ins.Create("users", dummy)
+	if err == nil {
+		t.Errorf("Duplicated")
+	}
+}
+
 func TestFindUser(t *testing.T) {
 	dummy := models.NewUser("id", "name", "password", "test@example.com")
 	err := ins.Create("users", dummy)

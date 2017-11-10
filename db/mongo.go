@@ -31,6 +31,20 @@ func (m *MongoInstance) url() string {
 	return m.Conf.User + ":" + m.Conf.Password + "@" + m.Conf.Server
 }
 
+func setIndex(s *mgo.Database) error {
+	// users
+	usersIndex := mgo.Index{
+		Key:        []string{"userId", "email"},
+		Unique:     true, // ユニーク
+		DropDups:   true, // ユニークインデックスが付いているデータに対して上書きを許可しない
+		Background: true, // バックグラウンドでインデックスを行う
+		Sparse:     true, // nilのデータはインデックスしない
+	}
+	err := s.C("users").EnsureIndex(usersIndex)
+
+	return err
+}
+
 func (m *MongoInstance) getConnection() (*mgo.Database, error) {
 	db := config.GetDBConfig().Database
 	if m.session != nil {
@@ -43,6 +57,10 @@ func (m *MongoInstance) getConnection() (*mgo.Database, error) {
 	session.SetMode(mgo.Monotonic, true)
 	session.SetSafe(&mgo.Safe{})
 	m.session = session
+	err = setIndex(session.DB(db))
+	if err != nil {
+		return nil, err
+	}
 	return session.DB(db), nil
 }
 

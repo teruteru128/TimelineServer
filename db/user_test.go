@@ -7,7 +7,7 @@ import (
 )
 
 func TestFindUser(t *testing.T) {
-	dummy := models.NewUser("hello", "name", "password", "hello@example.com")
+	dummy := models.NewUser("hello", "password", "hello@example.com")
 	err := ins.Create("users", dummy)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -28,7 +28,7 @@ func TestFindUser(t *testing.T) {
 
 func TestDeleteUser(t *testing.T) {
 	id := "waste"
-	dummy := models.NewUser(id, "trash", "password", "garbage@example.com")
+	dummy := models.NewUser(id, "password", "garbage@example.com")
 	err := ins.Create("users", dummy)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -45,7 +45,7 @@ func TestDeleteUser(t *testing.T) {
 
 func TestSuspendUser(t *testing.T) {
 	id := "banned"
-	ban := models.NewUser(id, "name", "password", "banned@example.com")
+	ban := models.NewUser(id, "password", "banned@example.com")
 	err := ins.Create("users", ban)
 	if err != nil {
 		t.Errorf(err.Error())

@@ -22,7 +22,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	resource, err := pool.Run("mongo", "3.0", []string{})
+	resource, err := pool.Run("mongo", "latest", []string{})
 	if err != nil {
 		log.Fatalf("Could not start resource: %s", err)
 	}
@@ -48,7 +48,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestCreate(t *testing.T) {
-	dummy := models.NewUser("id", "name", "password", "test@example.com")
+	dummy := models.NewUser("id", "password", "test@example.com")
 	err := ins.Create("users", dummy)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -56,8 +56,8 @@ func TestCreate(t *testing.T) {
 }
 
 func TestDuplicated(t *testing.T) {
-	dummy := models.NewUser("dup", "name", "password", "dup@example.com")
-	dummy2 := models.NewUser("dup", "name", "password", "dup@example.com")
+	dummy := models.NewUser("dup", "password", "dup@example.com")
+	dummy2 := models.NewUser("dup", "password", "dup@example.com")
 	err := ins.Create("users", dummy)
 	if err != nil {
 		t.Errorf(err.Error())

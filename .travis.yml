@@ -1,0 +1,10 @@
+language: go
+go:
+  - 1.7
+
+# Sudo is required for docker
+sudo: required
+
+# Enable docker
+services:
+  - docker

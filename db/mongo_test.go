@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/TinyKitten/Timeline/config"
-	"github.com/TinyKitten/Timeline/models"
+	"github.com/TinyKitten/TimelineServer/config"
+	"github.com/TinyKitten/TimelineServer/models"
 
 	"gopkg.in/ory-am/dockertest.v3"
 )

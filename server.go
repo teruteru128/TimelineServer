@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/TinyKitten/Timeline/api"
+	"github.com/TinyKitten/TimelineServer/api"
 )
 
 func main() {

@@ -3,7 +3,7 @@ package db
 import (
 	"testing"
 
-	"github.com/TinyKitten/Timeline/models"
+	"github.com/TinyKitten/TimelineServer/models"
 )
 
 func TestFindUser(t *testing.T) {
@@ -23,14 +23,6 @@ func TestFindUser(t *testing.T) {
 	_, err = ins.FindUser("ugly_betty")
 	if err == nil {
 		t.Errorf("already registered")
-	}
-}
-
-func TestEmptyInstance(t *testing.T) {
-	badIns := MongoInstance{}
-	_, err := badIns.FindUser("hoge")
-	if err == nil {
-		t.Errorf("bad instance")
 	}
 }
 

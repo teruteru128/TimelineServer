@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/TinyKitten/Timeline/db"
+	"github.com/TinyKitten/TimelineServer/db"
 	"go.uber.org/zap"
 	validator "gopkg.in/go-playground/validator.v9"
 )

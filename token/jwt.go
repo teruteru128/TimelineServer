@@ -5,7 +5,7 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/TinyKitten/Timeline/config"
+	"github.com/TinyKitten/TimelineServer/config"
 	jwt "github.com/dgrijalva/jwt-go"
 )
 

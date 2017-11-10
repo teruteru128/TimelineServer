@@ -1,7 +1,7 @@
 package db
 
 import (
-	"github.com/TinyKitten/Timeline/models"
+	"github.com/TinyKitten/TimelineServer/models"
 	"gopkg.in/mgo.v2/bson"
 )
 

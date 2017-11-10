@@ -1,8 +1,8 @@
 package db
 
 import (
-	"github.com/TinyKitten/Timeline/config"
-	"github.com/TinyKitten/Timeline/logger"
+	"github.com/TinyKitten/TimelineServer/config"
+	"github.com/TinyKitten/TimelineServer/logger"
 	"go.uber.org/zap"
 	"gopkg.in/mgo.v2"
 )

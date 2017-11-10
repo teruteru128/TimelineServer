@@ -3,7 +3,7 @@ package db
 import (
 	"testing"
 
-	"github.com/TinyKitten/Timeline/models"
+	"github.com/TinyKitten/TimelineServer/models"
 )
 
 func TestFindUser(t *testing.T) {

@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"github.com/TinyKitten/Timeline/config"
+	"github.com/TinyKitten/TimelineServer/config"
 	"go.uber.org/zap"
 )
 

@@ -3,9 +3,9 @@ package api
 import (
 	"strconv"
 
-	"github.com/TinyKitten/Timeline/config"
-	"github.com/TinyKitten/Timeline/db"
-	"github.com/TinyKitten/Timeline/logger"
+	"github.com/TinyKitten/TimelineServer/config"
+	"github.com/TinyKitten/TimelineServer/db"
+	"github.com/TinyKitten/TimelineServer/logger"
 	validator "gopkg.in/go-playground/validator.v9"
 
 	"github.com/labstack/echo"

@@ -3,12 +3,12 @@ package api
 import (
 	"net/http"
 
-	"github.com/TinyKitten/Timeline/utils"
+	"github.com/TinyKitten/TimelineServer/utils"
 
-	"github.com/TinyKitten/Timeline/token"
+	"github.com/TinyKitten/TimelineServer/token"
 	"go.uber.org/zap"
 
-	"github.com/TinyKitten/Timeline/models"
+	"github.com/TinyKitten/TimelineServer/models"
 	"github.com/labstack/echo"
 	"github.com/labstack/gommon/log"
 	mgo "gopkg.in/mgo.v2"

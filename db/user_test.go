@@ -26,14 +26,6 @@ func TestFindUser(t *testing.T) {
 	}
 }
 
-func TestEmptyInstance(t *testing.T) {
-	badIns := MongoInstance{}
-	_, err := badIns.FindUser("hoge")
-	if err == nil {
-		t.Errorf("bad instance")
-	}
-}
-
 func TestDeleteUser(t *testing.T) {
 	id := "waste"
 	dummy := models.NewUser(id, "trash", "password", "garbage@example.com")

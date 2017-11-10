@@ -1,9 +1,8 @@
 package config
 
 import (
+	"flag"
 	"log"
-	"path"
-	"runtime"
 
 	"github.com/BurntSushi/toml"
 )
@@ -18,8 +17,8 @@ type Config struct {
 type APIConfig struct {
 	Port     uint   `toml:"port"`
 	Version  string `toml:"version"`
-	Endpoint string `toml:"endpoint"`
 	Debug    bool   `toml:"debug"`
+	Endpoint string `toml:"endpoint"`
 	Jwt      string `toml:"jwt"`
 }
 
@@ -33,13 +32,26 @@ type DBConfig struct {
 
 // GetConfig TOML設定ファイルから設定を取得
 func GetConfig() Config {
-	var config Config
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		panic("No caller information")
+	if flag.Lookup("test.v") != nil {
+		mockAPIConfig := APIConfig{
+			Port:     8080,
+			Version:  "v1",
+			Debug:    true,
+			Endpoint: "",
+			Jwt:      "token",
+		}
+		mockDBConfig := DBConfig{
+			Server:   "localhost:27017",
+			Database: "timeline",
+		}
+		return Config{
+			API: mockAPIConfig,
+			DB:  mockDBConfig,
+		}
 	}
-	dir := path.Dir(filename)
-	if _, err := toml.DecodeFile(dir+"/../config.toml", &config); err != nil {
+
+	var config Config
+	if _, err := toml.DecodeFile("../config.toml", &config); err != nil {
 		log.Fatal(err)
 	}
 	return config

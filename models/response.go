@@ -5,7 +5,7 @@ import "time"
 // UserResponse GET /users/:id のためのレスポンス
 type UserResponse struct {
 	ID             string `json:"id"`             // 恒久ID (bson ObjectID)
-	UserID         string `json:"userID"`         // ユーザ名(@kitten)
+	UserID         string `json:"userId"`         // ユーザ名(@kitten)
 	DisplayName    string `json:"displayName"`    // 表示名(Kitten)
 	PostsCount     uint   `json:"postsCount"`     // 投稿総数(0-)
 	Location       string `json:"location"`       // 居住地(グンマー)

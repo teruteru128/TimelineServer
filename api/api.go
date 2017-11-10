@@ -31,5 +31,9 @@ func StartServer() {
 	v1.POST("/signup", h.signupHandler)
 	v1.POST("/login", h.loginHandler)
 
+	v1.GET("/:id", h.getUserHandler)
+	v1.DELETE("/:id", h.userDeleteHandler)
+	v1.POST("/:id/suspend", h.userSuspendHandler)
+
 	e.Logger.Fatal(e.Start(host))
 }

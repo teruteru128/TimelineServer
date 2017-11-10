@@ -78,3 +78,43 @@ func (h *handler) loginHandler(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, resp)
 }
+
+func (h *handler) getUserHandler(c echo.Context) error {
+	id := c.Param("id")
+
+	u, err := h.db.FindUser(id)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return &echo.HTTPError{Code: http.StatusNotFound, Message: ErrNotFound}
+		}
+		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
+	}
+	resp := models.UserToUserResponse(*u)
+	return c.JSON(http.StatusOK, resp)
+}
+
+func (h *handler) userDeleteHandler(c echo.Context) error {
+	id := c.Param("id")
+
+	err := h.db.DeleteUser(id)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return &echo.HTTPError{Code: http.StatusNotFound, Message: ErrNotFound}
+		}
+		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
+	}
+	return &echo.HTTPError{Code: http.StatusOK, Message: RespDeleted}
+}
+
+func (h *handler) userSuspendHandler(c echo.Context) error {
+	id := c.Param("id")
+
+	err := h.db.SuspendUser(id, true)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return &echo.HTTPError{Code: http.StatusNotFound, Message: ErrNotFound}
+		}
+		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
+	}
+	return &echo.HTTPError{Code: http.StatusOK, Message: RespSuspended}
+}

@@ -14,8 +14,9 @@ type User struct {
 	Password    string          `json:"password"`                 // 暗号化済みパスワード
 	EMail       string          `json:"email"`                    // メールアドレス
 	Location    string          `json:"location"`                 // 居住地(グンマー)
-	Following   []bson.ObjectId `json:"following"`                // フォローしているユーザーのセット(1,23,48)
-	Followers   []bson.ObjectId `json:"followers"`                // フォローされているユーザーのセット(2,38,54)
+	Following   []bson.ObjectId `json:"following"`                // フォローしているユーザーのセット
+	Followers   []bson.ObjectId `json:"followers"`                // フォローされているユーザーのセット
+	Posts       []bson.ObjectId `json:"posts"`                    // 投稿のセット
 	WebsiteURL  string          `json:"websiteUrl"`               // ウェブサイトのURL(http://example.com)
 	AvatarURL   string          `json:"avatarUrl"`                // プロフィール画像(http://static_cdn/profile_images/0.png)
 	Suspended   bool            `json:"suspended"`                // 凍結フラグ(TRUE/FALSE)
@@ -34,6 +35,7 @@ func NewUser(id string, name string, password string, mail string) *User {
 		Location:    "",
 		Following:   []bson.ObjectId{},
 		Followers:   []bson.ObjectId{},
+		Posts:       []bson.ObjectId{},
 		WebsiteURL:  "",
 		AvatarURL:   "",
 		Suspended:   false,

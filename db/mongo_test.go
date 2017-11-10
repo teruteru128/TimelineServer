@@ -67,35 +67,3 @@ func TestDuplicated(t *testing.T) {
 		t.Errorf("Duplicated")
 	}
 }
-
-func TestFindUser(t *testing.T) {
-	dummy := models.NewUser("hello", "name", "password", "hello@example.com")
-	err := ins.Create("users", dummy)
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-	exist, err := ins.FindUser("hello")
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-	if exist == nil {
-		t.Errorf("User not found")
-	}
-
-	_, err = ins.FindUser("ugly_betty")
-	if err == nil {
-		t.Errorf("already registered")
-	}
-}
-
-func TestEmptyInstance(t *testing.T) {
-	badIns := MongoInstance{}
-	_, err := badIns.FindUser("hoge")
-	if err == nil {
-		t.Errorf("bad instance")
-	}
-	err = badIns.Create("bad", empty{})
-	if err == nil {
-		t.Errorf("bad instance")
-	}
-}

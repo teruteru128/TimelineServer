@@ -25,5 +25,6 @@ const (
 	ErrBadFormat      = "bad format"
 	ErrLoginFailed    = "invalid credential"
 	ErrUnknown        = "unknown error"
+	ErrSuspended      = "account suspended"
 	RespCreated       = "created"
 )

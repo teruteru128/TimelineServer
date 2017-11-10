@@ -47,6 +47,7 @@ func (h *handler) loginHandler(c echo.Context) error {
 	if err := c.Bind(reqUser); err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrParamsRequired}
 	}
+
 	u, err := h.db.FindUser(reqUser.ID)
 	if err != nil {
 		if err == mgo.ErrNotFound {
@@ -57,6 +58,12 @@ func (h *handler) loginHandler(c echo.Context) error {
 	if matched := utils.CheckPasswordHash(reqUser.Password, u.Password); !matched {
 		return &echo.HTTPError{Code: http.StatusUnauthorized, Message: ErrLoginFailed}
 	}
+
+	// 凍結
+	if u.Suspended {
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrSuspended}
+	}
+
 	token, err := token.CreateToken(u.ID)
 	if err != nil {
 		h.logger.Error("Failed to create jwt token", zap.String("Reason", err.Error()))

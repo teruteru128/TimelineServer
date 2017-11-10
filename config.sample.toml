@@ -1,0 +1,12 @@
+[API]
+port = 8080
+version = "v1"
+endpoint = ""
+debug = true
+jwt = ""
+
+[DB]
+server = ""
+database = ""
+user = ""
+password = ""

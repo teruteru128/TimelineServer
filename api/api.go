@@ -9,6 +9,7 @@ import (
 	validator "gopkg.in/go-playground/validator.v9"
 
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 )
 
 // StartServer APIサーバを起動する
@@ -22,6 +23,7 @@ func StartServer() {
 
 	host := apiConfig.Endpoint + ":" + port
 	e := echo.New()
+	e.Use(middleware.CORS())
 	e.Validator = &customValidator{validator: validator.New()}
 
 	// API Version 1 Base

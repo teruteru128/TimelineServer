@@ -15,16 +15,19 @@ import (
 )
 
 type (
-	User struct {
+	SignupReq struct {
 		ID       string `json:"id" validate:"required"`
-		Name     string `json:"name" validate:"required"`
 		Email    string `json:"email" validate:"required,email"`
+		Password string `json:"password" validate:"required"`
+	}
+	LoginReq struct {
+		ID       string `json:"id" validate:"required"`
 		Password string `json:"password" validate:"required"`
 	}
 )
 
 func (h *handler) signupHandler(c echo.Context) error {
-	reqUser := new(User)
+	reqUser := new(SignupReq)
 	if err := c.Bind(reqUser); err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrParamsRequired}
 	}
@@ -36,14 +39,17 @@ func (h *handler) signupHandler(c echo.Context) error {
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
 	}
-	u := models.NewUser(reqUser.ID, reqUser.Name, hashed, reqUser.Email)
-	h.db.Create("users", u)
+	u := models.NewUser(reqUser.ID, hashed, reqUser.Email)
+	err = h.db.Create("users", u)
+	if err != nil {
+		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
+	}
 
 	return &echo.HTTPError{Code: http.StatusCreated, Message: RespCreated}
 }
 
 func (h *handler) loginHandler(c echo.Context) error {
-	reqUser := new(User)
+	reqUser := new(LoginReq)
 	if err := c.Bind(reqUser); err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrParamsRequired}
 	}

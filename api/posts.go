@@ -3,9 +3,6 @@ package api
 import (
 	"net/http"
 	"strconv"
-	"time"
-
-	"github.com/TinyKitten/TimelineServer/sentence"
 
 	"github.com/TinyKitten/TimelineServer/models"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -22,39 +19,6 @@ type (
 		models.UserResponse `json:"user"`
 	}
 )
-
-func (h *handler) getSampleStreamHandler(c echo.Context) error {
-	token := c.Get("user").(*jwt.Token)
-	claims := token.Claims.(jwt.MapClaims)
-	objID := claims["id"].(string)
-
-	if h.checkSuspended(objID) {
-		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrSuspended}
-	}
-
-	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
-	if err != nil {
-		return err
-	}
-	defer ws.Close()
-
-	for {
-		user, post := sentence.GetRandomPost()
-		respUser := models.UserToUserResponse(*user)
-		resp := StreamPostResp{
-			*post,
-			respUser,
-		}
-
-		// Write
-		err := ws.WriteJSON(resp)
-		if err != nil {
-			c.Logger().Error(err)
-		}
-
-		time.Sleep(1 * time.Second)
-	}
-}
 
 func (h *handler) getPublicPostsHandler(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)

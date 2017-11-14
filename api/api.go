@@ -1,12 +1,14 @@
 package api
 
 import (
+	"net/http"
 	"strconv"
 
 	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/TinyKitten/TimelineServer/db"
 	"github.com/TinyKitten/TimelineServer/logger"
 	"github.com/gorilla/websocket"
+	"github.com/rs/cors"
 	validator "gopkg.in/go-playground/validator.v9"
 
 	"github.com/labstack/echo"
@@ -14,7 +16,13 @@ import (
 )
 
 var (
-	upgrader = websocket.Upgrader{}
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
 )
 
 // StartServer APIサーバを起動する
@@ -31,6 +39,9 @@ func StartServer() {
 
 	host := apiConfig.Endpoint + ":" + port
 	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Pre(middleware.RemoveTrailingSlash())
 	e.Use(middleware.CORS())
 	e.Validator = &customValidator{validator: validator.New()}
 
@@ -49,8 +60,6 @@ func StartServer() {
 	// /v1/posts Handlers(Restricted)
 	posts := v1j.Group("/posts")
 	posts.POST("/", h.postHandler)
-	// posts.GET("/public_stream", h.getPublicStreamHandler)
-	posts.GET("/sample_stream", h.getSampleStreamHandler)
 	// /v1/posts/public Handlers(Restricted)
 	pubPosts := posts.Group("/public")
 	pubPosts.GET("/", h.getPublicPostsHandler)
@@ -63,6 +72,15 @@ func StartServer() {
 	usersj := v1j.Group("/users")
 	usersj.DELETE("/:id", h.userDeleteHandler)
 	usersj.POST("/:id/suspend", h.userSuspendHandler)
+
+	// Socket.io
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+	})
+	sioHandler := c.Handler(h.socketIOHandler())
+	e.GET("/socket.io", echo.WrapHandler(sioHandler))
+	e.POST("/socket.io", echo.WrapHandler(sioHandler))
 
 	e.Logger.Fatal(e.Start(host))
 }

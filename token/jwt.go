@@ -9,6 +9,11 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
+type JwtClaim struct {
+	ID string `json:"id"`
+	jwt.StandardClaims
+}
+
 func CreateToken(id bson.ObjectId) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)

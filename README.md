@@ -1,4 +1,4 @@
 # Timeline
-[![Build Status](https://travis-ci.org/TinyKitten/TimelineServer.svg?branch=master)](https://travis-ci.org/TinyKitten/TimelineServer)
+[![Build Status](hhttps://travis-ci.org/TinyKitten/TimelineServer.svg?branch=developttps://travis-ci.org/TinyKitten/TimelineServer.svg?branch=master)](https://travis-ci.org/TinyKitten/TimelineServer)
 
 Twitterのタイムラインっぽいやつ

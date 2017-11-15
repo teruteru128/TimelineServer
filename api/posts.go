@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"strconv"
+	"unicode/utf8"
 
 	"github.com/TinyKitten/TimelineServer/models"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -55,6 +56,10 @@ func (h *handler) postHandler(c echo.Context) error {
 	if err := c.Validate(req); err != nil {
 		log.Error(err.Error())
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrBadFormat}
+	}
+
+	if utf8.RuneCountInString(req.Text) > 140 {
+		return &echo.HTTPError{Code: http.StatusRequestEntityTooLarge, Message: ErrTooLong}
 	}
 
 	newPost := models.NewPost(objID, req.Text)

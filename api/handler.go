@@ -35,6 +35,7 @@ const (
 	RespDeleted       = "deleted"
 	RespSuspended     = "suspended"
 	ErrDuplicated     = "resource duplicated"
+	ErrTooLong        = "post text too long"
 )
 
 func handleMgoError(err error) *echo.HTTPError {

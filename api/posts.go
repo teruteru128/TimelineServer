@@ -33,7 +33,7 @@ func (h *handler) getPublicPostsHandler(c echo.Context) error {
 
 	posts, err := h.db.GetAllPosts(limit)
 	if err != nil {
-		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
+		return handleMgoError(err)
 	}
 
 	return c.JSON(http.StatusOK, posts)
@@ -61,7 +61,7 @@ func (h *handler) postHandler(c echo.Context) error {
 
 	err := h.db.Create("posts", newPost)
 	if err != nil {
-		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
+		return handleMgoError(err)
 	}
 
 	return nil

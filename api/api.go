@@ -46,7 +46,7 @@ func StartServer() {
 	e.Validator = &customValidator{validator: validator.New()}
 
 	// API Version 1 Base
-	v1 := e.Group("v1")
+	v1 := e.Group("/v1")
 
 	// /v1/signup Handler
 	v1.POST("/signup", h.signupHandler)
@@ -54,7 +54,7 @@ func StartServer() {
 	v1.POST("/login", h.loginHandler)
 
 	// JWT RESTRICTED
-	v1j := v1.Group("")
+	v1j := v1.Group("/")
 	v1j.Use(middleware.JWT([]byte(apiConfig.Jwt)))
 
 	// /v1/posts Handlers(Restricted)

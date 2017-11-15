@@ -30,6 +30,10 @@ type DBConfig struct {
 	Password string `toml:"password"`
 }
 
+const (
+	MockJwtToken = "token"
+)
+
 // GetConfig TOML設定ファイルから設定を取得
 func GetConfig() Config {
 	if flag.Lookup("test.v") != nil {
@@ -38,7 +42,7 @@ func GetConfig() Config {
 			Version:  "v1",
 			Debug:    true,
 			Endpoint: "",
-			Jwt:      "token",
+			Jwt:      MockJwtToken,
 		}
 		mockDBConfig := DBConfig{
 			Server:   "localhost:27017",

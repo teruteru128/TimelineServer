@@ -1,9 +1,13 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/TinyKitten/TimelineServer/db"
+	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	validator "gopkg.in/go-playground/validator.v9"
+	mgo "gopkg.in/mgo.v2"
 )
 
 type (
@@ -30,4 +34,18 @@ const (
 	RespCreated       = "created"
 	RespDeleted       = "deleted"
 	RespSuspended     = "suspended"
+	ErrDuplicated     = "resource duplicated"
+	ErrTooLong        = "post text too long"
 )
+
+func handleMgoError(err error) *echo.HTTPError {
+	if mgo.IsDup(err) {
+		return &echo.HTTPError{Code: http.StatusConflict, Message: ErrDuplicated}
+	}
+	switch err {
+	case mgo.ErrNotFound:
+		return &echo.HTTPError{Code: http.StatusNotFound, Message: ErrNotFound}
+	default:
+		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
+	}
+}

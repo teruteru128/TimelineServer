@@ -42,7 +42,7 @@ func (h *handler) signupHandler(c echo.Context) error {
 	u := models.NewUser(reqUser.ID, hashed, reqUser.Email)
 	err = h.db.Create("users", u)
 	if err != nil {
-		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
+		return handleMgoError(err)
 	}
 
 	return &echo.HTTPError{Code: http.StatusCreated, Message: RespCreated}
@@ -90,10 +90,7 @@ func (h *handler) getUserHandler(c echo.Context) error {
 
 	u, err := h.db.FindUser(id)
 	if err != nil {
-		if err == mgo.ErrNotFound {
-			return &echo.HTTPError{Code: http.StatusNotFound, Message: ErrNotFound}
-		}
-		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
+		return handleMgoError(err)
 	}
 	resp := models.UserToUserResponse(*u)
 	return c.JSON(http.StatusOK, resp)
@@ -104,10 +101,7 @@ func (h *handler) userDeleteHandler(c echo.Context) error {
 
 	err := h.db.DeleteUser(id)
 	if err != nil {
-		if err == mgo.ErrNotFound {
-			return &echo.HTTPError{Code: http.StatusNotFound, Message: ErrNotFound}
-		}
-		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
+		return handleMgoError(err)
 	}
 	return &echo.HTTPError{Code: http.StatusOK, Message: RespDeleted}
 }
@@ -117,10 +111,7 @@ func (h *handler) userSuspendHandler(c echo.Context) error {
 
 	err := h.db.SuspendUser(id, true)
 	if err != nil {
-		if err == mgo.ErrNotFound {
-			return &echo.HTTPError{Code: http.StatusNotFound, Message: ErrNotFound}
-		}
-		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
+		return handleMgoError(err)
 	}
 	return &echo.HTTPError{Code: http.StatusOK, Message: RespSuspended}
 }

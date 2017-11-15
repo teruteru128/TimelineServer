@@ -4,8 +4,26 @@ import (
 	"testing"
 
 	"github.com/TinyKitten/TimelineServer/models"
+	"gopkg.in/mgo.v2/bson"
 )
 
+func TestFindUserByOID(t *testing.T) {
+	dummy := models.NewUser("hello2", "password", "hello2@example.com")
+	err := ins.Create("users", dummy)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	_, err = ins.FindUserByOID(dummy.ID.Hex())
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	_, err = ins.FindUserByOID(bson.NewObjectId().Hex())
+	if err == nil {
+		t.Errorf("not registered")
+	}
+}
 func TestFindUser(t *testing.T) {
 	dummy := models.NewUser("hello", "password", "hello@example.com")
 	err := ins.Create("users", dummy)
@@ -22,7 +40,7 @@ func TestFindUser(t *testing.T) {
 
 	_, err = ins.FindUser("ugly_betty")
 	if err == nil {
-		t.Errorf("already registered")
+		t.Errorf("not registered")
 	}
 }
 

@@ -9,6 +9,19 @@ const (
 	UsersCol = "users"
 )
 
+func (m *MongoInstance) FindUserByOID(objectId string) (*models.User, error) {
+	conn, err := m.getConnection()
+	if err != nil {
+		return nil, handleError(err)
+	}
+	u := new(models.User)
+	if err := conn.C(UsersCol).
+		Find(bson.M{"_id": bson.ObjectIdHex(objectId)}).One(&u); err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+
 func (m *MongoInstance) FindUser(userid string) (*models.User, error) {
 	conn, err := m.getConnection()
 	if err != nil {

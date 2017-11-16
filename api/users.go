@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/TinyKitten/TimelineServer/utils"
 
 	"github.com/TinyKitten/TimelineServer/token"
@@ -106,10 +108,11 @@ func (h *handler) userDeleteHandler(c echo.Context) error {
 	return &echo.HTTPError{Code: http.StatusOK, Message: RespDeleted}
 }
 
+// 管理者API　ObjectIDで処理
 func (h *handler) userSuspendHandler(c echo.Context) error {
-	id := c.Param("id")
+	oid := bson.ObjectIdHex(c.Param("oid"))
 
-	err := h.db.SuspendUser(id, true)
+	err := h.db.SuspendUser(oid, true)
 	if err != nil {
 		return handleMgoError(err)
 	}

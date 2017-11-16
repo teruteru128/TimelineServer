@@ -18,6 +18,9 @@ type (
 	customValidator struct {
 		validator *validator.Validate
 	}
+	messageResponse struct {
+		Message string `json:"message"`
+	}
 )
 
 func (cv *customValidator) Validate(i interface{}) error {
@@ -36,6 +39,8 @@ const (
 	RespSuspended     = "suspended"
 	ErrDuplicated     = "resource duplicated"
 	ErrTooLong        = "post text too long"
+	RespFollowed      = "followed"
+	RespUnfollowed    = "unfollowed"
 )
 
 func handleMgoError(err error) *echo.HTTPError {

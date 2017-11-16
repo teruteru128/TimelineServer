@@ -25,7 +25,7 @@ type User struct {
 }
 
 // NewUser 初期化されたUser構造体を返す
-func NewUser(id string, password string, mail string) *User {
+func NewUser(id, password, mail string) *User {
 	return &User{
 		ID:          bson.NewObjectId(),
 		UserID:      id,

@@ -54,7 +54,7 @@ func StartServer() {
 	v1.POST("/login", h.loginHandler)
 
 	// JWT RESTRICTED
-	v1j := v1.Group("/")
+	v1j := v1.Group("")
 	v1j.Use(middleware.JWT([]byte(apiConfig.Jwt)))
 
 	// /v1/posts Handlers(Restricted)
@@ -68,10 +68,19 @@ func StartServer() {
 	users := v1.Group("/users")
 	users.GET("/:id", h.getUserHandler)
 
+	// Administrator
+	v1j.POST("/suspend/:oid", h.userSuspendHandler)
+
+	// Relationships
+	v1j.PUT("/follow/:id", h.followHandler)
+	v1j.PUT("/unfollow/:id", h.unfollowHandler)
+	// Relations
+	v1j.GET("/following/:id", h.followingListHandler)
+	v1j.GET("/follower/:id", h.followerListHandler)
+
 	// Restricted /users
 	usersj := v1j.Group("/users")
 	usersj.DELETE("/:id", h.userDeleteHandler)
-	usersj.POST("/:id/suspend", h.userSuspendHandler)
 
 	// Socket.io
 	c := cors.New(cors.Options{

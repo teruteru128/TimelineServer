@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/TinyKitten/TimelineServer/models"
 	"github.com/TinyKitten/TimelineServer/sentence"
@@ -38,7 +40,7 @@ func (h *handler) socketIOHandler() http.Handler {
 				so.Disconnect()
 			}
 
-			_, err = h.db.FindUserByOID(claim.ID)
+			_, err = h.db.FindUserByOID(bson.ObjectId(bson.ObjectIdHex(claim.ID)))
 			if err != nil {
 				h.logger.Debug(loggerTopic, zap.String("Error", err.Error()))
 				so.Emit("unauthorized", err.Error())

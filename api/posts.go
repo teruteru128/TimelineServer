@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"unicode/utf8"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/TinyKitten/TimelineServer/models"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
@@ -24,9 +26,13 @@ type (
 func (h *handler) getPublicPostsHandler(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
-	objID := claims["id"].(string)
-
-	if h.checkSuspended(objID) {
+	idStr := claims["id"].(string)
+	objID := bson.ObjectId(bson.ObjectIdHex(idStr))
+	suspended, err := h.checkSuspended(objID)
+	if err != nil {
+		return handleMgoError(err)
+	}
+	if suspended {
 		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrSuspended}
 	}
 
@@ -43,9 +49,14 @@ func (h *handler) getPublicPostsHandler(c echo.Context) error {
 func (h *handler) postHandler(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
-	objID := claims["id"].(string)
+	idStr := claims["id"].(string)
+	objID := bson.ObjectId(bson.ObjectIdHex(idStr))
 
-	if h.checkSuspended(objID) {
+	suspended, err := h.checkSuspended(objID)
+	if err != nil {
+		return handleMgoError(err)
+	}
+	if suspended {
 		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrSuspended}
 	}
 
@@ -62,9 +73,14 @@ func (h *handler) postHandler(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusRequestEntityTooLarge, Message: ErrTooLong}
 	}
 
-	newPost := models.NewPost(objID, req.Text)
+	u, err := h.db.FindUserByOID(objID)
+	if err != nil {
+		return handleMgoError(err)
+	}
 
-	err := h.db.Create("posts", newPost)
+	newPost := models.NewPost(u.UserID, req.Text)
+
+	err = h.db.Create("posts", newPost)
 	if err != nil {
 		return handleMgoError(err)
 	}

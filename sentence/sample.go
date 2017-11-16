@@ -21,6 +21,7 @@ func GetRandomPost() (*models.User, *models.Post) {
 		profile.Login.Username,
 		profile.Login.Md5,
 		profile.Email,
+		true,
 	)
 	sender.DisplayName = randomdata.Title(randomdata.RandomGender)
 

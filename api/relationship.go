@@ -21,14 +21,6 @@ func (h *handler) followHandler(c echo.Context) error {
 	idStr := claims["id"].(string)
 	objID := bson.ObjectId(bson.ObjectIdHex(idStr))
 
-	suspended, err := h.checkSuspended(objID)
-	if err != nil {
-		return handleMgoError(err)
-	}
-	if suspended {
-		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrSuspended}
-	}
-
 	displayName := c.Param("id")
 	followUser, err := h.db.FindUser(displayName)
 	if err != nil {
@@ -49,14 +41,6 @@ func (h *handler) unfollowHandler(c echo.Context) error {
 	idStr := claims["id"].(string)
 	objID := bson.ObjectId(bson.ObjectIdHex(idStr))
 
-	suspended, err := h.checkSuspended(objID)
-	if err != nil {
-		return handleMgoError(err)
-	}
-	if suspended {
-		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrSuspended}
-	}
-
 	displayName := c.Param("id")
 	followUser, err := h.db.FindUser(displayName)
 	if err != nil {
@@ -72,19 +56,6 @@ func (h *handler) unfollowHandler(c echo.Context) error {
 }
 
 func (h *handler) followingListHandler(c echo.Context) error {
-	jwtUser := c.Get("user").(*jwt.Token)
-	claims := jwtUser.Claims.(jwt.MapClaims)
-	idStr := claims["id"].(string)
-	objID := bson.ObjectId(bson.ObjectIdHex(idStr))
-
-	suspended, err := h.checkSuspended(objID)
-	if err != nil {
-		return handleMgoError(err)
-	}
-	if suspended {
-		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrSuspended}
-	}
-
 	id := c.Param("id")
 	user, err := h.db.FindUser(id)
 	if err != nil {
@@ -104,19 +75,6 @@ func (h *handler) followingListHandler(c echo.Context) error {
 }
 
 func (h *handler) followerListHandler(c echo.Context) error {
-	jwtUser := c.Get("user").(*jwt.Token)
-	claims := jwtUser.Claims.(jwt.MapClaims)
-	idStr := claims["id"].(string)
-	objID := bson.ObjectId(bson.ObjectIdHex(idStr))
-
-	suspended, err := h.checkSuspended(objID)
-	if err != nil {
-		return handleMgoError(err)
-	}
-	if suspended {
-		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrSuspended}
-	}
-
 	id := c.Param("id")
 	user, err := h.db.FindUser(id)
 	if err != nil {

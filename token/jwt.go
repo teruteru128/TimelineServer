@@ -9,16 +9,19 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
-type JwtClaim struct {
+// JWTClaim JWTのクレーム
+type JWTClaim struct {
 	ID string `json:"id"`
 	jwt.StandardClaims
 }
 
-func CreateToken(id bson.ObjectId) (string, error) {
+// CreateToken JWTトークンを生成する
+func CreateToken(id bson.ObjectId, adminFlag bool) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["id"] = id
 	claims["iss"] = "KittenTimeline"
+	claims["admin"] = adminFlag
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
 	key := config.GetAPIConfig().Jwt

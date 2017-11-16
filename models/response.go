@@ -13,6 +13,7 @@ type UserResponse struct {
 	FollowersCount uint   `json:"followersCount"` // フォローされている数(0-)
 	WebsiteURL     string `json:"websiteUrl"`     // ウェブサイトのURL(http://example.com)
 	AvatarURL      string `json:"avatarUrl"`      // プロフィール画像(http://static_cdn/profile_images/0.png)
+	Official       bool   `json:"official"`       // 公式
 }
 
 // LoginSuccessResponse POST /auth が成功したときのレスポンス
@@ -40,5 +41,6 @@ func UserToUserResponse(user User) UserResponse {
 		FollowersCount: uint(len(user.Followers)),
 		WebsiteURL:     user.WebsiteURL,
 		AvatarURL:      user.AvatarURL,
+		Official:       user.Official,
 	}
 }

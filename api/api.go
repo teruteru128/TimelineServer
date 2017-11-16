@@ -69,7 +69,8 @@ func StartServer() {
 	users.GET("/:id", h.getUserHandler)
 
 	// Administrator
-	v1j.POST("/suspend/:oid", h.userSuspendHandler)
+	v1j.POST("/suspend", h.userSuspendHandler)
+	v1j.POST("/official", h.setOfficalFlagHandler)
 
 	// Relationships
 	v1j.PUT("/follow/:id", h.followHandler)

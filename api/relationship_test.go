@@ -18,9 +18,9 @@ import (
 func TestFollowingListHandler(t *testing.T) {
 	e := echo.New()
 
-	u := models.NewUser("yaju", "password", "yaju@example.com")
-	following1 := models.NewUser("tnok", "password", "tnok@example.com")
-	follower1 := models.NewUser("kbtit", "password", "kbtit@example.com")
+	u := models.NewUser("yaju", "password", "yaju@example.com", false)
+	following1 := models.NewUser("tnok", "password", "tnok@example.com", false)
+	follower1 := models.NewUser("kbtit", "password", "kbtit@example.com", false)
 	u.Followers = append(u.Followers, follower1.ID)
 	u.Following = append(u.Following, following1.ID)
 
@@ -39,7 +39,7 @@ func TestFollowingListHandler(t *testing.T) {
 
 	req := httptest.NewRequest(echo.GET, "/v1/following/:id", nil)
 
-	token, err := token.CreateToken(u.ID)
+	token, err := token.CreateToken(u.ID, false)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -76,9 +76,9 @@ func TestFollowingListHandler(t *testing.T) {
 func TestFollowerListHandler(t *testing.T) {
 	e := echo.New()
 
-	u := models.NewUser("yjsnpi2", "password", "yjsnpi2@example.com")
-	following1 := models.NewUser("mur2", "password", "mur2@example.com")
-	follower1 := models.NewUser("imp2", "password", "imp2@example.com")
+	u := models.NewUser("yjsnpi2", "password", "yjsnpi2@example.com", false)
+	following1 := models.NewUser("mur2", "password", "mur2@example.com", false)
+	follower1 := models.NewUser("imp2", "password", "imp2@example.com", false)
 	u.Followers = append(u.Followers, follower1.ID)
 	u.Following = append(u.Following, following1.ID)
 
@@ -97,7 +97,7 @@ func TestFollowerListHandler(t *testing.T) {
 
 	req := httptest.NewRequest(echo.GET, "/v1/following/:id", nil)
 
-	token, err := token.CreateToken(u.ID)
+	token, err := token.CreateToken(u.ID, false)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -134,7 +134,7 @@ func TestFollowerListHandler(t *testing.T) {
 func TestFollowingEmptyListHandler(t *testing.T) {
 	e := echo.New()
 
-	u := models.NewUser("yaju2", "password", "yaju2@example.com")
+	u := models.NewUser("yaju2", "password", "yaju2@example.com", false)
 
 	err := th.db.Create("users", u)
 	if err != nil {
@@ -143,7 +143,7 @@ func TestFollowingEmptyListHandler(t *testing.T) {
 
 	req := httptest.NewRequest(echo.GET, "/v1/following/:id", nil)
 
-	token, err := token.CreateToken(u.ID)
+	token, err := token.CreateToken(u.ID, false)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -171,7 +171,7 @@ func TestFollowingEmptyListHandler(t *testing.T) {
 func TestFollowerEmptyListHandler(t *testing.T) {
 	e := echo.New()
 
-	u := models.NewUser("yjsnpi", "password", "yjsnpi@example.com")
+	u := models.NewUser("yjsnpi", "password", "yjsnpi@example.com", false)
 
 	err := th.db.Create("users", u)
 	if err != nil {
@@ -180,7 +180,7 @@ func TestFollowerEmptyListHandler(t *testing.T) {
 
 	req := httptest.NewRequest(echo.GET, "/v1/following/:id", nil)
 
-	token, err := token.CreateToken(u.ID)
+	token, err := token.CreateToken(u.ID, false)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -208,8 +208,8 @@ func TestFollowerEmptyListHandler(t *testing.T) {
 func TestFollowHandler(t *testing.T) {
 	e := echo.New()
 
-	u := models.NewUser("fromkitten", "password", "fromkitten@example.com")
-	followUser := models.NewUser("tokotten", "password", "tokotten@example.com")
+	u := models.NewUser("fromkitten", "password", "fromkitten@example.com", false)
+	followUser := models.NewUser("tokotten", "password", "tokotten@example.com", false)
 
 	err := th.db.Create("users", u)
 	if err != nil {
@@ -222,7 +222,7 @@ func TestFollowHandler(t *testing.T) {
 
 	req := httptest.NewRequest(echo.PUT, "/v1/follow/:id", nil)
 
-	token, err := token.CreateToken(u.ID)
+	token, err := token.CreateToken(u.ID, false)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -270,8 +270,8 @@ func TestFollowHandler(t *testing.T) {
 func TestUnfollowHandler(t *testing.T) {
 	e := echo.New()
 
-	u := models.NewUser("fromkitten2", "password", "fromkitten2@example.com")
-	unfollowUser := models.NewUser("tokotten2", "password", "tokotten2@example.com")
+	u := models.NewUser("fromkitten2", "password", "fromkitten2@example.com", false)
+	unfollowUser := models.NewUser("tokotten2", "password", "tokotten2@example.com", false)
 
 	err := th.db.Create("users", u)
 	if err != nil {
@@ -284,7 +284,7 @@ func TestUnfollowHandler(t *testing.T) {
 
 	req := httptest.NewRequest(echo.PUT, "/v1/unfollow/:id", nil)
 
-	token, err := token.CreateToken(u.ID)
+	token, err := token.CreateToken(u.ID, false)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

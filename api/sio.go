@@ -30,7 +30,7 @@ func (h *handler) socketIOHandler() http.Handler {
 		// JWT Authentication
 		so.On("authenticate", func(tokenReq string) {
 			apiConfig := config.GetAPIConfig()
-			claim := token.JwtClaim{}
+			claim := token.JWTClaim{}
 			_, err := jwt.ParseWithClaims(tokenReq, &claim, func(token *jwt.Token) (interface{}, error) {
 				return []byte(apiConfig.Jwt), nil
 			})

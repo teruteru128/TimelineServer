@@ -24,18 +24,6 @@ type (
 )
 
 func (h *handler) getPublicPostsHandler(c echo.Context) error {
-	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-	idStr := claims["id"].(string)
-	objID := bson.ObjectId(bson.ObjectIdHex(idStr))
-	suspended, err := h.checkSuspended(objID)
-	if err != nil {
-		return handleMgoError(err)
-	}
-	if suspended {
-		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrSuspended}
-	}
-
 	limit, _ := strconv.Atoi(c.QueryParam("limit"))
 
 	posts, err := h.db.GetAllPosts(limit)
@@ -51,14 +39,6 @@ func (h *handler) postHandler(c echo.Context) error {
 	claims := user.Claims.(jwt.MapClaims)
 	idStr := claims["id"].(string)
 	objID := bson.ObjectId(bson.ObjectIdHex(idStr))
-
-	suspended, err := h.checkSuspended(objID)
-	if err != nil {
-		return handleMgoError(err)
-	}
-	if suspended {
-		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrSuspended}
-	}
 
 	req := new(PostReq)
 	if err := c.Bind(req); err != nil {

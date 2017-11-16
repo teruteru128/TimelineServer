@@ -3,8 +3,6 @@ package api
 import (
 	"net/http"
 
-	"gopkg.in/mgo.v2/bson"
-
 	"github.com/TinyKitten/TimelineServer/utils"
 
 	"github.com/TinyKitten/TimelineServer/token"
@@ -41,7 +39,7 @@ func (h *handler) signupHandler(c echo.Context) error {
 	if err != nil {
 		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
 	}
-	u := models.NewUser(reqUser.ID, hashed, reqUser.Email)
+	u := models.NewUser(reqUser.ID, hashed, reqUser.Email, false)
 	err = h.db.Create("users", u)
 	if err != nil {
 		return handleMgoError(err)
@@ -69,10 +67,11 @@ func (h *handler) loginHandler(c echo.Context) error {
 
 	// 凍結
 	if u.Suspended {
+		// TODO: どこかで凍結情報をキャッシュする
 		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrSuspended}
 	}
 
-	token, err := token.CreateToken(u.ID)
+	token, err := token.CreateToken(u.ID, false)
 	if err != nil {
 		h.logger.Error("Failed to create jwt token", zap.String("Reason", err.Error()))
 		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrLoginFailed}
@@ -106,15 +105,4 @@ func (h *handler) userDeleteHandler(c echo.Context) error {
 		return handleMgoError(err)
 	}
 	return &echo.HTTPError{Code: http.StatusOK, Message: RespDeleted}
-}
-
-// 管理者API　ObjectIDで処理
-func (h *handler) userSuspendHandler(c echo.Context) error {
-	oid := bson.ObjectIdHex(c.Param("oid"))
-
-	err := h.db.SuspendUser(oid, true)
-	if err != nil {
-		return handleMgoError(err)
-	}
-	return &echo.HTTPError{Code: http.StatusOK, Message: RespSuspended}
 }

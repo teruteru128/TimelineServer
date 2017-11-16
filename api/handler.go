@@ -41,6 +41,7 @@ const (
 	ErrTooLong        = "post text too long"
 	RespFollowed      = "followed"
 	RespUnfollowed    = "unfollowed"
+	ErrAdminOnly      = "administration area"
 )
 
 func handleMgoError(err error) *echo.HTTPError {

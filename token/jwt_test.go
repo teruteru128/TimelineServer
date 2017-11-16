@@ -7,7 +7,7 @@ import (
 )
 
 func TestCreateToken(t *testing.T) {
-	token, err := CreateToken(bson.NewObjectId())
+	token, err := CreateToken(bson.NewObjectId(), false)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

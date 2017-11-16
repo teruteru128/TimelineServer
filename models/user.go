@@ -22,10 +22,11 @@ type User struct {
 	Suspended   bool            `json:"suspended"`                // 凍結フラグ(TRUE/FALSE)
 	CreatedDate time.Time       `json:"createdDate"`              // ユーザ登録日時
 	UpdatedDate time.Time       `json:"updatedDate"`              // 最終更新日
+	Official    bool            `json:"official"`                 // 公式
 }
 
 // NewUser 初期化されたUser構造体を返す
-func NewUser(id, password, mail string) *User {
+func NewUser(id, password, mail string, isOfficial bool) *User {
 	return &User{
 		ID:          bson.NewObjectId(),
 		UserID:      id,
@@ -41,5 +42,6 @@ func NewUser(id, password, mail string) *User {
 		Suspended:   false,
 		CreatedDate: time.Now(),
 		UpdatedDate: time.Now(),
+		Official:    isOfficial,
 	}
 }

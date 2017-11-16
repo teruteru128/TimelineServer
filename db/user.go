@@ -108,3 +108,13 @@ func (m *MongoInstance) UnfollowUser(fromOID, toOID bson.ObjectId) error {
 	}
 	return nil
 }
+
+// SetOfficial ユーザにを公式アカウントに設定するか、剥奪する
+func (m *MongoInstance) SetOfficial(objectID bson.ObjectId, flag bool) error {
+	conn, err := m.getConnection()
+	if err != nil {
+		return handleError(err)
+	}
+	return conn.C(UsersCol).
+		Update(bson.M{"_id": objectID}, bson.M{"$set": bson.M{"official": flag}})
+}

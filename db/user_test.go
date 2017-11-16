@@ -8,7 +8,7 @@ import (
 )
 
 func TestFindUserByOID(t *testing.T) {
-	dummy := models.NewUser("hello2", "password", "hello2@example.com")
+	dummy := models.NewUser("hello2", "password", "hello2@example.com", false)
 	err := ins.Create("users", dummy)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -25,7 +25,7 @@ func TestFindUserByOID(t *testing.T) {
 	}
 }
 func TestFindUser(t *testing.T) {
-	dummy := models.NewUser("hello", "password", "hello@example.com")
+	dummy := models.NewUser("hello", "password", "hello@example.com", false)
 	err := ins.Create("users", dummy)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -46,7 +46,7 @@ func TestFindUser(t *testing.T) {
 
 func TestDeleteUser(t *testing.T) {
 	id := "waste"
-	dummy := models.NewUser(id, "password", "garbage@example.com")
+	dummy := models.NewUser(id, "password", "garbage@example.com", false)
 	err := ins.Create("users", dummy)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -62,11 +62,11 @@ func TestDeleteUser(t *testing.T) {
 }
 
 func TestFindUserByOIDArray(t *testing.T) {
-	arr1 := models.NewUser("arr1", "password", "arr1@example.com")
-	arr2 := models.NewUser("arr2", "password", "arr2@example.com")
-	arr3 := models.NewUser("arr3", "password", "arr3@example.com")
-	arr4 := models.NewUser("arr4", "password", "arr4@example.com")
-	arr5 := models.NewUser("arr5", "password", "arr5@example.com")
+	arr1 := models.NewUser("arr1", "password", "arr1@example.com", false)
+	arr2 := models.NewUser("arr2", "password", "arr2@example.com", false)
+	arr3 := models.NewUser("arr3", "password", "arr3@example.com", false)
+	arr4 := models.NewUser("arr4", "password", "arr4@example.com", false)
+	arr5 := models.NewUser("arr5", "password", "arr5@example.com", false)
 	arr := []models.User{*arr1, *arr2, *arr3, *arr4, *arr5}
 	err := createUserFromArray("users", arr)
 	if err != nil {
@@ -85,7 +85,7 @@ func TestFindUserByOIDArray(t *testing.T) {
 
 func TestSuspendUser(t *testing.T) {
 	id := "banned"
-	ban := models.NewUser(id, "password", "banned@example.com")
+	ban := models.NewUser(id, "password", "banned@example.com", false)
 	err := ins.Create("users", ban)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -119,8 +119,8 @@ func TestSuspendUser(t *testing.T) {
 func TestFollowUser(t *testing.T) {
 	followID := "follow1"
 	followerID := "follower1"
-	follow := models.NewUser(followID, "password", "follow@example.com")
-	follower := models.NewUser(followerID, "password", "follower@example.com")
+	follow := models.NewUser(followID, "password", "follow@example.com", false)
+	follower := models.NewUser(followerID, "password", "follower@example.com", false)
 	err := ins.Create("users", follow)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -154,8 +154,8 @@ func TestFollowUser(t *testing.T) {
 func TestUnfollowUser(t *testing.T) {
 	followID := "follow2"
 	followerID := "follower2"
-	follow := models.NewUser(followID, "password", "follow2@example.com")
-	follower := models.NewUser(followerID, "password", "follower2@example.com")
+	follow := models.NewUser(followID, "password", "follow2@example.com", false)
+	follower := models.NewUser(followerID, "password", "follower2@example.com", false)
 	err := ins.Create("users", follow)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -183,6 +183,28 @@ func TestUnfollowUser(t *testing.T) {
 	}
 	if len(follower.Followers) != 0 {
 		t.Fatal("not unfollowed")
+	}
+}
+
+func TestSetOfficial(t *testing.T) {
+	u := models.NewUser("tabunerai", "password", "tabunerai@example.com", false)
+	ins.Create("users", u)
+	ins.SetOfficial(u.ID, true)
+	u, err := ins.FindUserByOID(u.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	if !u.Official {
+		t.Fatal("failed")
+	}
+
+	ins.SetOfficial(u.ID, false)
+	u, err = ins.FindUserByOID(u.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	if u.Official {
+		t.Fatal("failed")
 	}
 }
 

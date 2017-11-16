@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/TinyKitten/TimelineServer/config"
@@ -37,28 +38,21 @@ func TestFollowingListHandler(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	req := httptest.NewRequest(echo.GET, "/v1/following/:id", nil)
-
 	token, err := token.CreateToken(u.ID, false)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %v", token))
+
+	q := make(url.Values)
+	q.Set("token", token)
+	req := httptest.NewRequest(echo.GET, "/v1/following/:id?"+q.Encode(), nil)
+
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-
 	c.SetParamNames("id")
 	c.SetParamValues("yaju")
 
-	err = middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey: []byte(config.MockJwtToken),
-	})(th.followingListHandler)(c)
-
-	if err != nil {
-		t.Error(err)
-	}
-
-	if assert.NoError(t, err) {
+	if assert.NoError(t, th.followingListHandler(c)) {
 		assert.NotEqual(t, "{\"users\":null}", rec.Body.String())
 
 		following1Resp := models.UserToUserResponse(*following1)
@@ -97,28 +91,27 @@ func TestFollowerListHandler(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	req := httptest.NewRequest(echo.GET, "/v1/following/:id", nil)
-
 	token, err := token.CreateToken(u.ID, false)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %v", token))
+
+	q := make(url.Values)
+	q.Set("token", token)
+
+	req := httptest.NewRequest(echo.GET, "/v1/following/:id?"+q.Encode(), nil)
+
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
 	c.SetParamNames("id")
 	c.SetParamValues("yjsnpi2")
 
-	err = middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey: []byte(config.MockJwtToken),
-	})(th.followerListHandler)(c)
-
 	if err != nil {
 		t.Error(err)
 	}
 
-	if assert.NoError(t, err) {
+	if assert.NoError(t, th.followerListHandler(c)) {
 		assert.NotEqual(t, "{\"users\":null}", rec.Body.String())
 
 		follower1Resp := models.UserToUserResponse(*follower1)
@@ -145,28 +138,27 @@ func TestFollowingEmptyListHandler(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	req := httptest.NewRequest(echo.GET, "/v1/following/:id", nil)
-
 	token, err := token.CreateToken(u.ID, false)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %v", token))
+
+	q := make(url.Values)
+	q.Set("token", token)
+
+	req := httptest.NewRequest(echo.GET, "/v1/following/:id?"+q.Encode(), nil)
+
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
 	c.SetParamNames("id")
 	c.SetParamValues("yaju2")
 
-	err = middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey: []byte(config.MockJwtToken),
-	})(th.followingListHandler)(c)
-
 	if err != nil {
 		t.Error(err)
 	}
 
-	if assert.NoError(t, err) {
+	if assert.NoError(t, th.followingListHandler(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "{\"users\":null}", rec.Body.String())
 	}
@@ -182,28 +174,25 @@ func TestFollowerEmptyListHandler(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	req := httptest.NewRequest(echo.GET, "/v1/following/:id", nil)
-
 	token, err := token.CreateToken(u.ID, false)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %v", token))
+	q := make(url.Values)
+	q.Set("token", token)
+	req := httptest.NewRequest(echo.GET, "/v1/follower/:id?"+q.Encode(), nil)
+
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
 	c.SetParamNames("id")
 	c.SetParamValues("yjsnpi")
 
-	err = middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey: []byte(config.MockJwtToken),
-	})(th.followerListHandler)(c)
-
 	if err != nil {
 		t.Error(err)
 	}
 
-	if assert.NoError(t, err) {
+	if assert.NoError(t, th.followerListHandler(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "{\"users\":null}", rec.Body.String())
 	}

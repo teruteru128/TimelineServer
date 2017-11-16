@@ -38,6 +38,7 @@ func (h *handler) socketIOHandler() http.Handler {
 				h.logger.Debug(loggerTopic, zap.String("Error", err.Error()))
 				so.Emit("unauthorized", err.Error())
 				so.Disconnect()
+				return
 			}
 
 			_, err = h.db.FindUserByOID(bson.ObjectId(bson.ObjectIdHex(claim.ID)))
@@ -45,6 +46,7 @@ func (h *handler) socketIOHandler() http.Handler {
 				h.logger.Debug(loggerTopic, zap.String("Error", err.Error()))
 				so.Emit("unauthorized", err.Error())
 				so.Disconnect()
+				return
 			}
 
 			h.logger.Debug(loggerTopic, zap.String("Success", ""))

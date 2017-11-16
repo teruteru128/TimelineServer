@@ -7,6 +7,7 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 
+	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/TinyKitten/TimelineServer/models"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
@@ -24,6 +25,19 @@ type (
 )
 
 func (h *handler) getPublicPostsHandler(c echo.Context) error {
+	// Jwtチェック
+	config := config.GetAPIConfig()
+	tokenStr := c.QueryParam("token")
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(config.Jwt), nil
+	})
+	if err != nil {
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+	if !token.Valid {
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+
 	limit, _ := strconv.Atoi(c.QueryParam("limit"))
 
 	posts, err := h.db.GetAllPosts(limit)

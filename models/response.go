@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	jwt "github.com/dgrijalva/jwt-go"
+)
 
 // UserResponse GET /users/:id のためのレスポンス
 type UserResponse struct {
@@ -14,6 +18,7 @@ type UserResponse struct {
 	WebsiteURL     string `json:"websiteUrl"`     // ウェブサイトのURL(http://example.com)
 	AvatarURL      string `json:"avatarUrl"`      // プロフィール画像(http://static_cdn/profile_images/0.png)
 	Official       bool   `json:"official"`       // 公式
+	jwt.StandardClaims
 }
 
 // LoginSuccessResponse POST /auth が成功したときのレスポンス

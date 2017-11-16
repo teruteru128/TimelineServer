@@ -61,8 +61,7 @@ func StartServer() {
 	posts := v1j.Group("/posts")
 	posts.POST("/", h.postHandler)
 	// /v1/posts/public Handlers(Restricted)
-	pubPosts := posts.Group("/public")
-	pubPosts.GET("/", h.getPublicPostsHandler)
+	v1.GET("/posts/public", h.getPublicPostsHandler)
 
 	// Not restricted /users
 	users := v1.Group("/users")
@@ -76,8 +75,8 @@ func StartServer() {
 	v1j.PUT("/follow/:id", h.followHandler)
 	v1j.PUT("/unfollow/:id", h.unfollowHandler)
 	// Relations
-	v1j.GET("/following/:id", h.followingListHandler)
-	v1j.GET("/follower/:id", h.followerListHandler)
+	v1.GET("/following/:id", h.followingListHandler) // TODO: 修正
+	v1.GET("/follower/:id", h.followerListHandler)   // TODO: 修正
 
 	// Restricted /users
 	usersj := v1j.Group("/users")

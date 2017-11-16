@@ -30,6 +30,7 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
+// UserToUserResponse UserをAPI用ユーザ構造体に変換する
 func UserToUserResponse(user User) UserResponse {
 	return UserResponse{
 		ID:             user.ID.Hex(),
@@ -43,4 +44,26 @@ func UserToUserResponse(user User) UserResponse {
 		AvatarURL:      user.AvatarURL,
 		Official:       user.Official,
 	}
+}
+
+// UsersToUserResponseArray User配列をAPI用ユーザ配列構造体に変換する
+func UsersToUserResponseArray(users []User) []UserResponse {
+	var arr []UserResponse
+	for _, user := range users {
+		resp := UserResponse{
+			ID:             user.ID.Hex(),
+			UserID:         user.UserID,
+			DisplayName:    user.DisplayName,
+			PostsCount:     uint(len(user.Posts)),
+			Location:       user.Location,
+			FollowingCount: uint(len(user.Following)),
+			FollowersCount: uint(len(user.Followers)),
+			WebsiteURL:     user.WebsiteURL,
+			AvatarURL:      user.AvatarURL,
+			Official:       user.Official,
+		}
+		arr = append(arr, resp)
+	}
+
+	return arr
 }

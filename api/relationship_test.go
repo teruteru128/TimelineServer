@@ -61,9 +61,11 @@ func TestFollowingListHandler(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.NotEqual(t, "{\"users\":null}", rec.Body.String())
 
+		following1Resp := models.UserToUserResponse(*following1)
+
 		expect := &usersResponse{
-			Users: []models.User{
-				*following1,
+			Users: []models.UserResponse{
+				following1Resp,
 			},
 		}
 		var actual usersResponse
@@ -119,9 +121,11 @@ func TestFollowerListHandler(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.NotEqual(t, "{\"users\":null}", rec.Body.String())
 
+		follower1Resp := models.UserToUserResponse(*follower1)
+
 		expect := &usersResponse{
-			Users: []models.User{
-				*follower1,
+			Users: []models.UserResponse{
+				follower1Resp,
 			},
 		}
 		var actual usersResponse

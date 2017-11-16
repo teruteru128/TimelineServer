@@ -11,7 +11,7 @@ import (
 
 type (
 	usersResponse struct {
-		Users []models.User `json:"users"`
+		Users []models.UserResponse `json:"users"`
 	}
 )
 
@@ -70,8 +70,8 @@ func (h *handler) followingListHandler(c echo.Context) error {
 	if err != nil {
 		return handleMgoError(err)
 	}
-
-	return c.JSON(http.StatusOK, &usersResponse{Users: users})
+	usersResp := models.UsersToUserResponseArray(users)
+	return c.JSON(http.StatusOK, &usersResponse{Users: usersResp})
 }
 
 func (h *handler) followerListHandler(c echo.Context) error {
@@ -89,6 +89,7 @@ func (h *handler) followerListHandler(c echo.Context) error {
 	if err != nil {
 		return handleMgoError(err)
 	}
+	usersResp := models.UsersToUserResponseArray(users)
 
-	return c.JSON(http.StatusOK, &usersResponse{Users: users})
+	return c.JSON(http.StatusOK, &usersResponse{Users: usersResp})
 }

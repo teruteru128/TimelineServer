@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -23,28 +24,28 @@ const (
 
 func TestGetPublicPostsHandler(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(echo.GET, "/v1/posts/public/", nil)
+	q := make(url.Values)
 	u := models.NewUser("id", "password", "mail@example.com", false)
 	err := th.db.Create("users", u)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 	token, err := token.CreateToken(u.ID, false)
+	q.Set("token", token)
+
+	req := httptest.NewRequest(echo.GET, "/v1/posts/public/?"+q.Encode(), nil)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %v", token))
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	err = middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey: []byte(config.MockJwtToken),
-	})(th.getPublicPostsHandler)(c)
 
-	if assert.NoError(t, err) {
+	if assert.NoError(t, th.getPublicPostsHandler(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "null", rec.Body.String())
 	}
 }
+
 func TestPostHandler(t *testing.T) {
 	e := echo.New()
 	postReq := `{"text": "` + GoodMessageText + `"}`

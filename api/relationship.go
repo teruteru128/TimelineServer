@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/TinyKitten/TimelineServer/models"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
@@ -56,6 +57,19 @@ func (h *handler) unfollowHandler(c echo.Context) error {
 }
 
 func (h *handler) followingListHandler(c echo.Context) error {
+	// Jwtチェック
+	config := config.GetAPIConfig()
+	tokenStr := c.QueryParam("token")
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(config.Jwt), nil
+	})
+	if err != nil {
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+	if !token.Valid {
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+
 	id := c.Param("id")
 	user, err := h.db.FindUser(id)
 	if err != nil {
@@ -75,6 +89,19 @@ func (h *handler) followingListHandler(c echo.Context) error {
 }
 
 func (h *handler) followerListHandler(c echo.Context) error {
+	// Jwtチェック
+	config := config.GetAPIConfig()
+	tokenStr := c.QueryParam("token")
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(config.Jwt), nil
+	})
+	if err != nil {
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+	if !token.Valid {
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+
 	id := c.Param("id")
 	user, err := h.db.FindUser(id)
 	if err != nil {

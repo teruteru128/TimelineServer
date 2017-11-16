@@ -42,6 +42,7 @@ const (
 	RespFollowed      = "followed"
 	RespUnfollowed    = "unfollowed"
 	ErrAdminOnly      = "administration area"
+	ErrInvalidJwt     = "invalid jwt token"
 )
 
 func handleMgoError(err error) *echo.HTTPError {

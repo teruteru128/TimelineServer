@@ -1,6 +1,8 @@
 package db
 
 import (
+	"time"
+
 	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/TinyKitten/TimelineServer/logger"
 	"go.uber.org/zap"
@@ -70,4 +72,13 @@ func (m *MongoInstance) Create(key string, data interface{}) error {
 		return handleError(err)
 	}
 	return conn.C(key).Insert(data)
+}
+
+func (m *MongoInstance) Iter(key string) (*mgo.Iter, error) {
+	conn, err := m.getConnection()
+	if err != nil {
+		return nil, handleError(err)
+	}
+	iter := conn.C(key).Find(nil).Sort("$natural").Tail(5 * time.Second)
+	return iter, nil
 }

@@ -1,7 +1,10 @@
 package db
 
 import (
+	"errors"
+
 	"github.com/TinyKitten/TimelineServer/models"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -30,9 +33,13 @@ func (m *MongoInstance) FindUserByOIDArray(objectIds []bson.ObjectId) ([]models.
 	if err != nil {
 		return nil, handleError(err)
 	}
+	if &objectIds == nil {
+		return nil, errors.New("empty array")
+	}
 	u := []models.User{}
-	if err := conn.C(UsersCol).
-		Find(bson.M{"_id": bson.M{"$in": objectIds}}).All(&u); err != nil {
+	err = conn.C(UsersCol).
+		Find(bson.M{"_id": bson.M{"$in": objectIds}}).All(&u)
+	if err != nil {
 		return nil, err
 	}
 	return u, nil
@@ -77,6 +84,20 @@ func (m *MongoInstance) FollowUser(fromOID, toOID bson.ObjectId) error {
 	if err != nil {
 		return handleError(err)
 	}
+
+	user, err := m.FindUserByOID(fromOID)
+	if err != nil {
+		return handleError(err)
+	}
+	_, err = m.FindUserByOIDArray(user.Following)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return errors.New("already followed")
+		} else {
+			handleError(err)
+		}
+	}
+
 	err = conn.C(UsersCol).
 		Update(bson.M{"_id": fromOID}, bson.M{"$push": bson.M{"following": toOID}})
 	if err != nil {

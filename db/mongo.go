@@ -1,22 +1,23 @@
 package db
 
 import (
-	"time"
-
 	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/TinyKitten/TimelineServer/logger"
 	"go.uber.org/zap"
 	"gopkg.in/mgo.v2"
 )
 
+const loggerTopic = "MongoDB Error"
+
 type MongoInstance struct {
 	Conf    config.DBConfig
 	session *mgo.Session
+	logger  zap.Logger
 }
 
 func handleError(err error) error {
 	logger := logger.GetLogger()
-	logger.Error("MongoDB Error", zap.String("Reason", err.Error()))
+	logger.Debug("MongoDB Error", zap.String("Reason", err.Error()))
 	return err
 }
 
@@ -57,7 +58,18 @@ func (m *MongoInstance) getConnection() (*mgo.Database, error) {
 	if err != nil {
 		return nil, err
 	}
+	logger := logger.GetLogger()
+	m.logger = *logger
 	return session.DB(db), nil
+}
+
+func (m *MongoInstance) GetCollection(key string) (*mgo.Collection, error) {
+	conn, err := m.getConnection()
+	if err != nil {
+		return nil, handleError(err)
+	}
+	col := conn.C(key)
+	return col, nil
 }
 
 func (m *MongoInstance) Ping() (err error) {
@@ -71,14 +83,8 @@ func (m *MongoInstance) Create(key string, data interface{}) error {
 	if err != nil {
 		return handleError(err)
 	}
-	return conn.C(key).Insert(data)
-}
-
-func (m *MongoInstance) Iter(key string) (*mgo.Iter, error) {
-	conn, err := m.getConnection()
 	if err != nil {
-		return nil, handleError(err)
+		return handleError(err)
 	}
-	iter := conn.C(key).Find(nil).Sort("$natural").Tail(5 * time.Second)
-	return iter, nil
+	return conn.C(key).Insert(data)
 }

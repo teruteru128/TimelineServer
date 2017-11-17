@@ -27,8 +27,10 @@ var (
 
 // StartServer APIサーバを起動する
 func StartServer() {
-	mongoIns := db.MongoInstance{Conf: config.GetDBConfig()}
 	logger := logger.GetLogger()
+	mongoIns := db.MongoInstance{
+		Conf: config.GetDBConfig(),
+	}
 	h := handler{
 		db:     &mongoIns,
 		logger: logger,
@@ -59,7 +61,7 @@ func StartServer() {
 
 	// /v1/posts Handlers(Restricted)
 	posts := v1j.Group("/posts")
-	posts.POST("/", h.postHandler)
+	posts.POST("", h.postHandler)
 	// /v1/posts/public Handlers(Restricted)
 	v1.GET("/posts/public", h.getPublicPostsHandler)
 
@@ -75,8 +77,8 @@ func StartServer() {
 	v1j.PUT("/follow/:id", h.followHandler)
 	v1j.PUT("/unfollow/:id", h.unfollowHandler)
 	// Relations
-	v1.GET("/following/:id", h.followingListHandler) // TODO: 修正
-	v1.GET("/follower/:id", h.followerListHandler)   // TODO: 修正
+	v1.GET("/following/:id", h.followingListHandler)
+	v1.GET("/follower/:id", h.followerListHandler)
 
 	// Restricted /users
 	usersj := v1j.Group("/users")

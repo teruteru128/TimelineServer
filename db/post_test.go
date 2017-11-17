@@ -3,7 +3,7 @@ package db
 import "testing"
 import "github.com/TinyKitten/TimelineServer/models"
 
-func TestGetAllPosts(t *testing.T) {
+func TestGetPosts(t *testing.T) {
 	p0 := models.NewPost("siketyan", "hoge")
 	p1 := models.NewPost("homo", "fuga")
 
@@ -16,7 +16,7 @@ func TestGetAllPosts(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	res, err := ins.GetAllPosts(2)
+	res, err := ins.GetPosts(2)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -37,7 +37,7 @@ func TestGetAllPosts(t *testing.T) {
 	}
 }
 
-func TestLimitedGetAllPosts(t *testing.T) {
+func TestLimitedGetPosts(t *testing.T) {
 	p0 := models.NewPost("siketyan", "hoge")
 	p1 := models.NewPost("homo", "fuga")
 
@@ -50,7 +50,7 @@ func TestLimitedGetAllPosts(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	res, err := ins.GetAllPosts(1)
+	res, err := ins.GetPosts(1)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

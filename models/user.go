@@ -30,7 +30,7 @@ func NewUser(id, password, mail string, isOfficial bool) *User {
 	return &User{
 		ID:          bson.NewObjectId(),
 		UserID:      id,
-		DisplayName: "New User",
+		DisplayName: id,
 		Password:    password,
 		EMail:       mail,
 		Location:    "",

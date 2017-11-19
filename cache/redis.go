@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/TinyKitten/DiscordBot/logger"
+	"github.com/TinyKitten/TimelineServer/logger"
 	"github.com/garyburd/redigo/redis"
 	"go.uber.org/zap"
 )

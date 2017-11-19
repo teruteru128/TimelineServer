@@ -45,7 +45,7 @@ func (h *handler) signupHandler(c echo.Context) error {
 		return handleMgoError(err)
 	}
 
-	return &echo.HTTPError{Code: http.StatusCreated, Message: RespCreated}
+	return c.JSON(http.StatusCreated, &messageResponse{Message: RespCreated})
 }
 
 func (h *handler) loginHandler(c echo.Context) error {
@@ -104,5 +104,5 @@ func (h *handler) userDeleteHandler(c echo.Context) error {
 	if err != nil {
 		return handleMgoError(err)
 	}
-	return &echo.HTTPError{Code: http.StatusOK, Message: RespDeleted}
+	return c.JSON(http.StatusNoContent, &messageResponse{Message: RespDeleted})
 }

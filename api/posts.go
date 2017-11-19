@@ -20,7 +20,7 @@ type (
 	}
 	StreamPostResp struct {
 		models.Post
-		models.UserResponse `json:"user"`
+		User models.UserResponse `json:"user"`
 	}
 )
 

@@ -41,8 +41,6 @@ func (h *handler) socketIOHandler() http.Handler {
 			token, err := jwt.Parse(tokenReq, func(token *jwt.Token) (interface{}, error) {
 				return []byte(apiConfig.Jwt), nil
 			})
-			claims := token.Claims.(jwt.MapClaims)
-
 			if err != nil {
 				h.logger.Debug(loggerTopic, zap.String("Error", err.Error()))
 				so.Emit("unauthorized", ErrInvalidJwt)
@@ -50,11 +48,13 @@ func (h *handler) socketIOHandler() http.Handler {
 				return
 			}
 
-			claimId := claims["id"].(string)
+			claims := token.Claims.(jwt.MapClaims)
+
+			claimID := claims["id"].(string)
 
 			so.Emit("authenticated")
 
-			so.Join(claimId)
+			so.Join(claimID)
 
 			// 初回送信
 			posts, err := h.db.GetAllPosts()
@@ -62,8 +62,8 @@ func (h *handler) socketIOHandler() http.Handler {
 				h.logger.Debug(loggerTopic, zap.String("Error", err.Error()))
 			}
 			for _, post := range *posts {
-				if j, _ := h.checkFollow(claimId, post); j != nil {
-					so.Emit(claimId, string(*j))
+				if j, _ := h.checkFollow(claimID, post); j != nil {
+					so.Emit(claimID, string(*j))
 					h.logger.Debug(loggerTopic, zap.Any("Sent", j))
 				}
 			}
@@ -71,10 +71,10 @@ func (h *handler) socketIOHandler() http.Handler {
 			go func(postChan chan models.Post) {
 				// 投稿監視
 				for post := range postChan {
-					j, followers := h.checkFollow(claimId, post)
+					j, followers := h.checkFollow(claimID, post)
 					if j != nil {
-						so.Emit(claimId, string(*j))
-						h.logger.Debug(loggerTopic, zap.Any("Sent", claimId))
+						so.Emit(claimID, string(*j))
+						h.logger.Debug(loggerTopic, zap.Any("Sent", claimID))
 						if followers != nil {
 							for _, f := range followers {
 								so.Emit(f.Hex(), string(*j))
@@ -90,7 +90,7 @@ func (h *handler) socketIOHandler() http.Handler {
 	return server
 }
 
-func (h *handler) checkFollow(claimId string, post models.Post) (*[]byte, []bson.ObjectId) {
+func (h *handler) checkFollow(claimID string, post models.Post) (*[]byte, []bson.ObjectId) {
 	// フォローしている人か確認
 	sender, err := h.db.FindUser(post.UserID)
 	if err != nil {
@@ -109,7 +109,7 @@ func (h *handler) checkFollow(claimId string, post models.Post) (*[]byte, []bson
 	}
 
 	// 自分の投稿
-	if sender.ID.Hex() == claimId {
+	if sender.ID.Hex() == claimID {
 		if len(sender.Followers) == 0 {
 			return &j, nil
 		}
@@ -118,7 +118,7 @@ func (h *handler) checkFollow(claimId string, post models.Post) (*[]byte, []bson
 
 	// 自分がフォローしている
 	for _, follower := range sender.Followers {
-		if follower.Hex() == claimId {
+		if follower.Hex() == claimID {
 			return &j, nil
 		}
 	}

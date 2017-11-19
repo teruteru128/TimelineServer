@@ -50,11 +50,11 @@ func (h *handler) socketIOHandler() http.Handler {
 
 			claims := token.Claims.(jwt.MapClaims)
 
-			claimId := claims["id"].(string)
+			claimID := claims["id"].(string)
 
 			so.Emit("authenticated")
 
-			so.Join(claimId)
+			so.Join(claimID)
 
 			// 初回送信
 			posts, err := h.db.GetAllPosts()
@@ -62,8 +62,8 @@ func (h *handler) socketIOHandler() http.Handler {
 				h.logger.Debug(loggerTopic, zap.String("Error", err.Error()))
 			}
 			for _, post := range *posts {
-				if j, _ := h.checkFollow(claimId, post); j != nil {
-					so.Emit(claimId, string(*j))
+				if j, _ := h.checkFollow(claimID, post); j != nil {
+					so.Emit(claimID, string(*j))
 					h.logger.Debug(loggerTopic, zap.Any("Sent", j))
 				}
 			}
@@ -71,10 +71,10 @@ func (h *handler) socketIOHandler() http.Handler {
 			go func(postChan chan models.Post) {
 				// 投稿監視
 				for post := range postChan {
-					j, followers := h.checkFollow(claimId, post)
+					j, followers := h.checkFollow(claimID, post)
 					if j != nil {
-						so.Emit(claimId, string(*j))
-						h.logger.Debug(loggerTopic, zap.Any("Sent", claimId))
+						so.Emit(claimID, string(*j))
+						h.logger.Debug(loggerTopic, zap.Any("Sent", claimID))
 						if followers != nil {
 							for _, f := range followers {
 								so.Emit(f.Hex(), string(*j))

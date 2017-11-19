@@ -41,14 +41,14 @@ func (h *handler) socketIOHandler() http.Handler {
 			token, err := jwt.Parse(tokenReq, func(token *jwt.Token) (interface{}, error) {
 				return []byte(apiConfig.Jwt), nil
 			})
-			claims := token.Claims.(jwt.MapClaims)
-
 			if err != nil {
 				h.logger.Debug(loggerTopic, zap.String("Error", err.Error()))
 				so.Emit("unauthorized", ErrInvalidJwt)
 				so.Disconnect()
 				return
 			}
+
+			claims := token.Claims.(jwt.MapClaims)
 
 			claimId := claims["id"].(string)
 

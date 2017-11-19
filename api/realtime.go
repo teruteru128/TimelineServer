@@ -108,6 +108,13 @@ func (h *handler) checkFollow(claimID string, post models.Post) (*[]byte, []bson
 		return nil, nil
 	}
 
+	// 自分がフォローしている
+	for _, senderFollower := range sender.Followers {
+		if senderFollower.Hex() == claimID {
+			return &j, nil
+		}
+	}
+
 	// 自分の投稿
 	if sender.ID.Hex() == claimID {
 		if len(sender.Followers) == 0 {
@@ -116,11 +123,5 @@ func (h *handler) checkFollow(claimID string, post models.Post) (*[]byte, []bson
 		return &j, sender.Followers
 	}
 
-	// 自分がフォローしている
-	for _, follower := range sender.Followers {
-		if follower.Hex() == claimID {
-			return &j, nil
-		}
-	}
 	return nil, nil
 }

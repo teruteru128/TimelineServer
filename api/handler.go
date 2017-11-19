@@ -30,7 +30,7 @@ func (cv *customValidator) Validate(i interface{}) error {
 const (
 	ErrParamsRequired = "parameters required"
 	ErrBadFormat      = "bad format"
-	ErrLoginFailed    = "invalid credential"
+	ErrLoginFailed    = "login failed"
 	ErrUnknown        = "unknown error"
 	ErrNotFound       = "not found"
 	ErrSuspended      = "account suspended"

@@ -40,7 +40,7 @@ func (h *handler) getPublicPostsHandler(c echo.Context) error {
 
 	limit, _ := strconv.Atoi(c.QueryParam("limit"))
 
-	posts, err := h.db.GetAllPosts(limit)
+	posts, err := h.db.GetPosts(limit)
 	if err != nil {
 		return handleMgoError(err)
 	}
@@ -79,5 +79,9 @@ func (h *handler) postHandler(c echo.Context) error {
 		return handleMgoError(err)
 	}
 
-	return nil
+	go func(post models.Post, postChan chan models.Post) {
+		postChan <- post
+	}(*newPost, postChan)
+
+	return c.JSON(http.StatusOK, &messageResponse{Message: "ok"})
 }

@@ -112,7 +112,7 @@ func (h *handler) followerListHandler(c echo.Context) error {
 		return c.JSON(http.StatusOK, &usersResponse{})
 	}
 
-	users, err := h.db.FindUserByOIDArray(user.Following)
+	users, err := h.db.FindUserByOIDArray(user.Followers)
 	if err != nil {
 		return handleMgoError(err)
 	}

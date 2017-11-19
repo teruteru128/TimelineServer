@@ -99,7 +99,7 @@ func TestFollowerListHandler(t *testing.T) {
 	q := make(url.Values)
 	q.Set("token", token)
 
-	req := httptest.NewRequest(echo.GET, "/v1/following/:id?"+q.Encode(), nil)
+	req := httptest.NewRequest(echo.GET, "/v1/following?"+q.Encode(), nil)
 
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)

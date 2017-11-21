@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"gopkg.in/mgo.v2/bson"
-
 	"github.com/TinyKitten/TimelineServer/models"
 
 	"github.com/TinyKitten/TimelineServer/config"
@@ -62,66 +60,75 @@ func (h *handler) socketIOHandler() http.Handler {
 				h.logger.Debug(loggerTopic, zap.String("Error", err.Error()))
 			}
 			for _, post := range *posts {
-				if j, _ := h.checkFollow(claimID, post); j != nil {
-					so.Emit(claimID, string(*j))
-					h.logger.Debug(loggerTopic, zap.Any("Sent", j))
+				me, err := h.db.FindUser(claimID)
+				if err != nil {
+					handleMgoError(err)
+				}
+				resp, err := h.newPostResponse(post)
+				if err != nil {
+					handleMgoError(err)
+				}
+				j, err := json.Marshal(resp)
+				if err != nil {
+					h.logger.Debug(loggerTopic, zap.Any("Error", err.Error()))
+					return
+				}
+
+				for _, follow := range me.Following {
+					if follow == post.UserID {
+						so.Emit(follow.Hex(), string(j))
+						h.logger.Debug(loggerTopic, zap.Any("Sent", follow.Hex()))
+					}
 				}
 			}
 
 			go func(postChan chan models.Post) {
 				// 投稿監視
 				for post := range postChan {
-					j, followers := h.checkFollow(claimID, post)
-					if j != nil {
-						so.Emit(claimID, string(*j))
-						h.logger.Debug(loggerTopic, zap.Any("Sent", claimID))
-						if followers != nil {
-							for _, f := range followers {
-								so.Emit(f.Hex(), string(*j))
-								h.logger.Debug(loggerTopic, zap.Any("Sent", f.Hex()))
-							}
-						}
-						h.logger.Debug(loggerTopic, zap.Any("Sent", j))
+					sender, err := h.db.FindUser(post.UserID.Hex())
+					if err != nil {
+						handleMgoError(err)
 					}
+
+					resp, err := h.newPostResponse(post)
+					if err != nil {
+						handleMgoError(err)
+					}
+
+					j, err := json.Marshal(resp)
+					if err != nil {
+						h.logger.Debug(loggerTopic, zap.Any("Error", err.Error()))
+						continue
+					}
+					so.Emit(claimID, string(j))
+					h.logger.Debug(loggerTopic, zap.Any("Sent", claimID))
+
+					if len(sender.Followers) == 0 {
+						continue
+					}
+
+					for _, follower := range sender.Followers {
+						so.Emit(follower.Hex(), string(j))
+						h.logger.Debug(loggerTopic, zap.Any("Sent", follower.Hex()))
+					}
+
+					/*
+						j, followers := h.checkFollow(claimID, post)
+						if j != nil {
+							so.Emit(claimID, string(*j))
+							h.logger.Debug(loggerTopic, zap.Any("Sent", claimID))
+							if followers != nil {
+								for _, f := range followers {
+									so.Emit(f.Hex(), string(*j))
+									h.logger.Debug(loggerTopic, zap.Any("Sent", f.Hex()))
+								}
+							}
+							h.logger.Debug(loggerTopic, zap.Any("Sent", j))
+						}
+					*/
 				}
 			}(postChan)
 		})
 	})
 	return server
-}
-
-func (h *handler) checkFollow(claimID string, post models.Post) (*[]byte, []bson.ObjectId) {
-	// フォローしている人か確認
-	sender, err := h.db.FindUser(post.UserID)
-	if err != nil {
-		h.logger.Debug(loggerTopic, zap.String("Error", err.Error()))
-		return nil, nil
-	}
-	respUser := models.UserToUserResponse(*sender)
-	resp := StreamPostResp{
-		post,
-		respUser,
-	}
-	j, err := json.Marshal(resp)
-	if err != nil {
-		h.logger.Debug(loggerTopic, zap.String("Error", err.Error()))
-		return nil, nil
-	}
-
-	// 自分がフォローしている
-	for _, senderFollower := range sender.Followers {
-		if senderFollower.Hex() == claimID {
-			return &j, nil
-		}
-	}
-
-	// 自分の投稿
-	if sender.ID.Hex() == claimID {
-		if len(sender.Followers) == 0 {
-			return &j, nil
-		}
-		return &j, sender.Followers
-	}
-
-	return nil, nil
 }

@@ -16,13 +16,46 @@ import (
 
 type (
 	PostReq struct {
-		Text string `json:"text" validate:"required"`
+		Status            string `json:"status" validate:"required"`
+		InReplyToStatusID string `json:"in_reply_to_status_id"`
 	}
-	StreamPostResp struct {
-		models.Post
-		User models.UserResponse `json:"user"`
+	PostResponse struct {
+		Favorited           bool              `json:"favorited"`
+		CreatedAt           string            `json:"created_at"`
+		ID                  string            `json:"id"`
+		Entities            models.PostEntity `json:"entities"`
+		InReplyToUserID     string            `json:"in_reply_to_user_id"`
+		Text                string            `json:"text"`
+		Shared              bool              `json:"shared"`
+		SharedCount         int               `json:"shared_count"`
+		User                models.User       `json:"user"`
+		InReplyToScreenName string            `json:"in_reply_to_screen_name"`
 	}
 )
+
+func (h *handler) newPostResponse(post models.Post) (*PostResponse, error) {
+	sender, err := h.db.FindUserByOID(post.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &PostResponse{
+		Favorited: false,
+		CreatedAt: post.CreatedAt.String(),
+		ID:        post.ID.Hex(),
+		Entities: models.PostEntity{
+			URLs:         post.URLs,
+			Hashtags:     post.Hashtags,
+			UserMentions: []models.Post{},
+		},
+		InReplyToUserID:     post.InReplyToUserID.Hex(),
+		Text:                post.Text,
+		Shared:              false,
+		SharedCount:         len(post.Shared),
+		User:                models.User{},
+		InReplyToScreenName: sender.DisplayName,
+	}, nil
+}
 
 func (h *handler) getPublicPostsHandler(c echo.Context) error {
 	// Jwtチェック
@@ -48,7 +81,7 @@ func (h *handler) getPublicPostsHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, posts)
 }
 
-func (h *handler) postHandler(c echo.Context) error {
+func (h *handler) updateStatusHandler(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	idStr := claims["id"].(string)
@@ -63,7 +96,7 @@ func (h *handler) postHandler(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrBadFormat}
 	}
 
-	if utf8.RuneCountInString(req.Text) > 140 {
+	if utf8.RuneCountInString(req.Status) > 140 {
 		return &echo.HTTPError{Code: http.StatusRequestEntityTooLarge, Message: ErrTooLong}
 	}
 
@@ -72,7 +105,7 @@ func (h *handler) postHandler(c echo.Context) error {
 		return handleMgoError(err)
 	}
 
-	newPost := models.NewPost(u.UserID, req.Text)
+	newPost := models.NewPost(u.UserID, req.Status, req.InReplyToStatusID)
 
 	err = h.db.Insert("posts", newPost)
 	if err != nil {

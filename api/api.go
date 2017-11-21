@@ -56,7 +56,7 @@ func StartServer() {
 
 	// /v1/posts Handlers(Restricted)
 	posts := v1j.Group("/posts")
-	posts.POST("", h.postHandler)
+	posts.POST("/update_status.json", h.updateStatusHandler)
 	// /v1/posts/public Handlers(Restricted)
 	v1.GET("/posts/public", h.getPublicPostsHandler)
 
@@ -65,16 +65,18 @@ func StartServer() {
 	users.GET("/:id", h.getUserHandler)
 
 	// Administrator
-	v1j.POST("/suspend", h.userSuspendHandler)
-	v1j.POST("/official", h.setOfficalFlagHandler)
+	superj := v1j.Group("/super")
+	superj.POST("/update_suspend.json", h.userSuspendHandler)
+	superj.POST("/update_official.json", h.setOfficalFlagHandler)
+	superj.DELETE("destroy_user.json/:id", h.userDeleteHandler)
 
 	// Static
 	v1j.Static("/static", "static")
 
 	// Friendship
 	friendshipj := v1j.Group("friendships")
-	friendshipj.PUT("/create,json", h.followHandler)
-	friendshipj.PUT("/destroy.json", h.unfollowHandler)
+	friendshipj.POST("/create,json", h.followHandler)
+	friendshipj.POST("/destroy.json", h.unfollowHandler)
 	friends := v1.Group("/friends")
 	friends.GET("/ids.json", h.friendsIdsHandler)
 	friends.GET("/list.json", h.friendsListHandler)
@@ -82,9 +84,8 @@ func StartServer() {
 	followers.GET("/ids.json", h.followerIdsHandler)
 	followers.GET("/list.json", h.followerListHandler)
 
-	// Restricted /users
-	usersj := v1j.Group("/users")
-	usersj.DELETE("/:id", h.userDeleteHandler)
+	statusesj := v1.Group("/statuses")
+	statusesj.POST("/update.json", h.updateStatusHandler)
 
 	// Socket.io
 	c := cors.New(cors.Options{
@@ -97,5 +98,5 @@ func StartServer() {
 
 	e.AutoTLSManager.HostPolicy = autocert.HostWhitelist(apiConfig.Endpoint)
 	e.AutoTLSManager.Cache = autocert.DirCache(".cache")
-	e.Logger.Fatal(e.Start(host))
+	e.Logger.Fatal(e.StartTLS(host, "cert.pem", "key.pem"))
 }

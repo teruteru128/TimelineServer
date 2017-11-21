@@ -19,3 +19,6 @@ config.toml
 
 static/
 .cache
+
+cert.pem
+key.pem

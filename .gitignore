@@ -16,3 +16,6 @@ vendor/
 
 # Server configuration files
 config.toml
+
+static/
+.cache

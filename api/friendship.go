@@ -7,16 +7,17 @@ import (
 	"github.com/TinyKitten/TimelineServer/models"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
+	"go.uber.org/zap"
 	"gopkg.in/mgo.v2/bson"
 )
 
 type (
-	usersResponse struct {
-		Users []models.UserResponse `json:"users"`
-	}
 	basicRequest struct {
 		DisplayName string `json:"displayName"`
 		UserID      string `json:"userId"`
+	}
+	FollowerResponse struct {
+		Ids []bson.ObjectId `json:"ids"`
 	}
 )
 
@@ -71,7 +72,36 @@ func (h *handler) unfollowHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, &resp)
 }
 
-func (h *handler) followingListHandler(c echo.Context) error {
+func (h *handler) friendsIdsHandler(c echo.Context) error {
+	config := config.GetAPIConfig()
+	tokenStr := c.QueryParam("token")
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(config.Jwt), nil
+	})
+	if err != nil {
+		h.logger.Debug("API Error", zap.String("Error", err.Error()))
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+	if !token.Valid {
+		h.logger.Debug("API Error", zap.String("Error", err.Error()))
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+	claims := token.Claims.(jwt.MapClaims)
+	id := claims["id"].(string)
+
+	user, err := h.db.FindUser(id)
+	if err != nil {
+		return handleMgoError(err)
+	}
+
+	if len(user.Following) == 0 {
+		return c.JSON(http.StatusOK, &FollowerResponse{})
+	}
+
+	return c.JSON(http.StatusOK, &FollowerResponse{Ids: user.Following})
+}
+
+func (h *handler) followerIdsHandler(c echo.Context) error {
 	// Jwtチェック
 	config := config.GetAPIConfig()
 	tokenStr := c.QueryParam("token")
@@ -85,22 +115,29 @@ func (h *handler) followingListHandler(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
 	}
 
-	id := c.Param("id")
-	user, err := h.db.FindUser(id)
-	if err != nil {
-		return handleMgoError(err)
+	id := c.QueryParam("user_id")
+	displayName := c.QueryParam("screen_name")
+
+	user := &models.User{}
+	if id != "" {
+		user, err = h.db.FindUserByOID(bson.ObjectId(id))
+		if err != nil {
+			return handleMgoError(err)
+		}
 	}
 
-	if len(user.Following) == 0 {
-		return c.JSON(http.StatusOK, &usersResponse{})
+	if displayName != "" {
+		user, err = h.db.FindUser(displayName)
+		if err != nil {
+			return handleMgoError(err)
+		}
 	}
 
-	users, err := h.db.FindUserByOIDArray(user.Following)
-	if err != nil {
-		return handleMgoError(err)
+	if len(user.Followers) == 0 {
+		return c.JSON(http.StatusOK, &FollowerResponse{})
 	}
-	usersResp := models.UsersToUserResponseArray(users)
-	return c.JSON(http.StatusOK, &usersResponse{Users: usersResp})
+
+	return c.JSON(http.StatusOK, &FollowerResponse{Ids: user.Followers})
 }
 
 func (h *handler) followerListHandler(c echo.Context) error {
@@ -117,21 +154,80 @@ func (h *handler) followerListHandler(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
 	}
 
-	id := c.Param("id")
-	user, err := h.db.FindUser(id)
-	if err != nil {
-		return handleMgoError(err)
+	id := c.QueryParam("user_id")
+	displayName := c.QueryParam("screen_name")
+
+	user := &models.User{}
+	if id != "" {
+		user, err = h.db.FindUserByOID(bson.ObjectId(id))
+		if err != nil {
+			return handleMgoError(err)
+		}
+	}
+
+	if displayName != "" {
+		user, err = h.db.FindUser(displayName)
+		if err != nil {
+			return handleMgoError(err)
+		}
 	}
 
 	if len(user.Followers) == 0 {
-		return c.JSON(http.StatusOK, &usersResponse{})
+		return c.JSON(http.StatusOK, &[]models.UserResponse{})
 	}
 
 	users, err := h.db.FindUserByOIDArray(user.Followers)
 	if err != nil {
 		return handleMgoError(err)
 	}
-	usersResp := models.UsersToUserResponseArray(users)
 
-	return c.JSON(http.StatusOK, &usersResponse{Users: usersResp})
+	resp := models.UsersToUserResponseArray(users)
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+func (h *handler) friendsListHandler(c echo.Context) error {
+	// Jwtチェック
+	config := config.GetAPIConfig()
+	tokenStr := c.QueryParam("token")
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(config.Jwt), nil
+	})
+	if err != nil {
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+	if !token.Valid {
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+
+	id := c.QueryParam("user_id")
+	displayName := c.QueryParam("screen_name")
+
+	user := &models.User{}
+	if id != "" {
+		user, err = h.db.FindUserByOID(bson.ObjectId(id))
+		if err != nil {
+			return handleMgoError(err)
+		}
+	}
+
+	if displayName != "" {
+		user, err = h.db.FindUser(displayName)
+		if err != nil {
+			return handleMgoError(err)
+		}
+	}
+
+	if len(user.Followers) == 0 {
+		return c.JSON(http.StatusOK, &[]models.UserResponse{})
+	}
+
+	users, err := h.db.FindUserByOIDArray(user.Following)
+	if err != nil {
+		return handleMgoError(err)
+	}
+
+	resp := models.UsersToUserResponseArray(users)
+
+	return c.JSON(http.StatusOK, resp)
 }

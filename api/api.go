@@ -1,29 +1,18 @@
 package api
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/TinyKitten/TimelineServer/db"
 	"github.com/TinyKitten/TimelineServer/logger"
-	"github.com/gorilla/websocket"
 	"github.com/rs/cors"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/acme/autocert"
 	validator "gopkg.in/go-playground/validator.v9"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-)
-
-var (
-	upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
-	}
 )
 
 // StartServer APIサーバを起動する
@@ -86,9 +75,12 @@ func StartServer() {
 	friendshipj := v1j.Group("friendships")
 	friendshipj.PUT("/create,json", h.followHandler)
 	friendshipj.PUT("/destroy.json", h.unfollowHandler)
-	// Relations
-	v1.GET("/following/:id", h.followingListHandler)
-	v1.GET("/follower/:id", h.followerListHandler)
+	friends := v1.Group("/friends")
+	friends.GET("/ids.json", h.friendsIdsHandler)
+	friends.GET("/list.json", h.friendsListHandler)
+	followers := v1.Group("/followers")
+	followers.GET("/ids.json", h.followerIdsHandler)
+	followers.GET("/list.json", h.followerListHandler)
 
 	// Restricted /users
 	usersj := v1j.Group("/users")
@@ -103,5 +95,7 @@ func StartServer() {
 	e.GET("/socket.io", echo.WrapHandler(sioHandler))
 	e.POST("/socket.io", echo.WrapHandler(sioHandler))
 
+	e.AutoTLSManager.HostPolicy = autocert.HostWhitelist(apiConfig.Endpoint)
+	e.AutoTLSManager.Cache = autocert.DirCache(".cache")
 	e.Logger.Fatal(e.Start(host))
 }

@@ -111,21 +111,6 @@ func (h *handler) socketIOHandler() http.Handler {
 						so.Emit(follower.Hex(), string(j))
 						h.logger.Debug(loggerTopic, zap.Any("Sent", follower.Hex()))
 					}
-
-					/*
-						j, followers := h.checkFollow(claimID, post)
-						if j != nil {
-							so.Emit(claimID, string(*j))
-							h.logger.Debug(loggerTopic, zap.Any("Sent", claimID))
-							if followers != nil {
-								for _, f := range followers {
-									so.Emit(f.Hex(), string(*j))
-									h.logger.Debug(loggerTopic, zap.Any("Sent", f.Hex()))
-								}
-							}
-							h.logger.Debug(loggerTopic, zap.Any("Sent", j))
-						}
-					*/
 				}
 			}(postChan)
 		})

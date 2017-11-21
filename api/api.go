@@ -75,7 +75,7 @@ func StartServer() {
 
 	// Friendship
 	friendshipj := v1j.Group("friendships")
-	friendshipj.POST("/create,json", h.followHandler)
+	friendshipj.POST("/create.json", h.followHandler)
 	friendshipj.POST("/destroy.json", h.unfollowHandler)
 	friends := v1.Group("/friends")
 	friends.GET("/ids.json", h.friendsIdsHandler)

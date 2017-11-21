@@ -13,8 +13,8 @@ import (
 
 type (
 	basicRequest struct {
-		DisplayName string `json:"displayName"`
-		UserID      string `json:"userId"`
+		DisplayName string `json:"screen_name"`
+		UserID      string `json:"user_id"`
 	}
 	FollowerResponse struct {
 		Ids []bson.ObjectId `json:"ids"`
@@ -31,12 +31,29 @@ func (h *handler) followHandler(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, &messageResponse{Message: ErrUnknown})
 	}
 
-	followUser, err := h.db.FindUser(req.DisplayName)
-	if err != nil {
-		return handleMgoError(err)
+	followUser := &models.User{}
+	if req.DisplayName != "" {
+		f, err := h.db.FindUser(req.DisplayName)
+		if err != nil {
+			return handleMgoError(err)
+		}
+		followUser = f
 	}
 
-	err = h.db.FollowUser(bson.ObjectId(idStr), followUser.ID)
+	if req.UserID != "" {
+		f, err := h.db.FindUserByOID(bson.ObjectId(req.UserID))
+		if err != nil {
+			return handleMgoError(err)
+		}
+		followUser = f
+	}
+
+	if req.UserID == "" && req.DisplayName == "" {
+		h.logger.Debug("API Error", zap.String("Error", ErrParamsRequired))
+		return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrParamsRequired}
+	}
+
+	err := h.db.FollowUser(bson.ObjectId(idStr), followUser.ID)
 	if err != nil {
 		return handleMgoError(err)
 	}
@@ -50,19 +67,35 @@ func (h *handler) unfollowHandler(c echo.Context) error {
 	jwtUser := c.Get("user").(*jwt.Token)
 	claims := jwtUser.Claims.(jwt.MapClaims)
 	idStr := claims["id"].(string)
-	objID := bson.ObjectId(bson.ObjectIdHex(idStr))
 
 	req := new(basicRequest)
 	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusInternalServerError, &messageResponse{Message: ErrUnknown})
 	}
 
-	removeUser, err := h.db.FindUser(req.DisplayName)
-	if err != nil {
-		return handleMgoError(err)
+	removeUser := &models.User{}
+	if req.DisplayName != "" {
+		f, err := h.db.FindUser(req.DisplayName)
+		if err != nil {
+			return handleMgoError(err)
+		}
+		removeUser = f
 	}
 
-	err = h.db.UnfollowUser(objID, removeUser.ID)
+	if req.UserID != "" {
+		f, err := h.db.FindUserByOID(bson.ObjectId(req.UserID))
+		if err != nil {
+			return handleMgoError(err)
+		}
+		removeUser = f
+	}
+
+	if req.UserID == "" && req.DisplayName == "" {
+		h.logger.Debug("API Error", zap.String("Error", ErrParamsRequired))
+		return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrParamsRequired}
+	}
+
+	err := h.db.UnfollowUser(bson.ObjectId(idStr), removeUser.ID)
 	if err != nil {
 		return handleMgoError(err)
 	}

@@ -74,7 +74,7 @@ func (h *handler) postHandler(c echo.Context) error {
 
 	newPost := models.NewPost(u.UserID, req.Text)
 
-	err = h.db.Create("posts", newPost)
+	err = h.db.Insert("posts", newPost)
 	if err != nil {
 		return handleMgoError(err)
 	}

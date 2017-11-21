@@ -9,7 +9,7 @@ import (
 
 func TestFindUserByOID(t *testing.T) {
 	dummy := models.NewUser("hello2", "password", "hello2@example.com", false)
-	err := ins.Create("users", dummy)
+	err := ins.Insert("users", dummy)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -26,7 +26,7 @@ func TestFindUserByOID(t *testing.T) {
 }
 func TestFindUser(t *testing.T) {
 	dummy := models.NewUser("hello", "password", "hello@example.com", false)
-	err := ins.Create("users", dummy)
+	err := ins.Insert("users", dummy)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -47,7 +47,7 @@ func TestFindUser(t *testing.T) {
 func TestDeleteUser(t *testing.T) {
 	id := "waste"
 	dummy := models.NewUser(id, "password", "garbage@example.com", false)
-	err := ins.Create("users", dummy)
+	err := ins.Insert("users", dummy)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -86,7 +86,7 @@ func TestFindUserByOIDArray(t *testing.T) {
 func TestSuspendUser(t *testing.T) {
 	id := "banned"
 	ban := models.NewUser(id, "password", "banned@example.com", false)
-	err := ins.Create("users", ban)
+	err := ins.Insert("users", ban)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -121,11 +121,11 @@ func TestFollowUser(t *testing.T) {
 	followerID := "follower1"
 	follow := models.NewUser(followID, "password", "follow@example.com", false)
 	follower := models.NewUser(followerID, "password", "follower@example.com", false)
-	err := ins.Create("users", follow)
+	err := ins.Insert("users", follow)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	err = ins.Create("users", follower)
+	err = ins.Insert("users", follower)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -156,11 +156,11 @@ func TestUnfollowUser(t *testing.T) {
 	followerID := "follower2"
 	follow := models.NewUser(followID, "password", "follow2@example.com", false)
 	follower := models.NewUser(followerID, "password", "follower2@example.com", false)
-	err := ins.Create("users", follow)
+	err := ins.Insert("users", follow)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	err = ins.Create("users", follower)
+	err = ins.Insert("users", follower)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -188,7 +188,7 @@ func TestUnfollowUser(t *testing.T) {
 
 func TestSetOfficial(t *testing.T) {
 	u := models.NewUser("tabunerai", "password", "tabunerai@example.com", false)
-	ins.Create("users", u)
+	ins.Insert("users", u)
 	ins.SetOfficial(u.ID, true)
 	u, err := ins.FindUserByOID(u.ID)
 	if err != nil {

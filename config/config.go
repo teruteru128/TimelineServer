@@ -9,8 +9,10 @@ import (
 
 // Config 設定構造体
 type Config struct {
-	API APIConfig
-	DB  DBConfig
+	API         APIConfig
+	DB          DBConfig
+	Cache       CacheConfig
+	UploadImage UploadImageConfig
 }
 
 // APIConfig API設定構造体
@@ -28,6 +30,17 @@ type DBConfig struct {
 	Database string `toml:"database"`
 	User     string `toml:"user"`
 	Password string `toml:"password"`
+}
+
+type CacheConfig struct {
+	Server   string `toml:"server"`
+	Port     int    `toml:"port"`
+	User     string `toml:"user"`
+	Password string `toml:"password"`
+}
+
+type UploadImageConfig struct {
+	Path string `toml:"path"`
 }
 
 const (
@@ -48,9 +61,18 @@ func GetConfig() Config {
 			Server:   "localhost:27017",
 			Database: "timeline",
 		}
+		mockCacheConfig := CacheConfig{
+			Server: "localhost",
+			Port:   6379,
+		}
+		mockUploadImage := UploadImageConfig{
+			Path: "",
+		}
 		return Config{
-			API: mockAPIConfig,
-			DB:  mockDBConfig,
+			API:         mockAPIConfig,
+			DB:          mockDBConfig,
+			Cache:       mockCacheConfig,
+			UploadImage: mockUploadImage,
 		}
 	}
 
@@ -71,4 +93,14 @@ func GetAPIConfig() APIConfig {
 func GetDBConfig() DBConfig {
 	baseConfig := GetConfig()
 	return baseConfig.DB
+}
+
+func GetCacheConfig() CacheConfig {
+	baseConfig := GetConfig()
+	return baseConfig.Cache
+}
+
+func GetUploadImagePath() string {
+	baseConfig := GetConfig().UploadImage
+	return baseConfig.Path
 }

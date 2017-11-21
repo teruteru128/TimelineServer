@@ -9,6 +9,7 @@ import (
 	"github.com/TinyKitten/TimelineServer/logger"
 	"github.com/gorilla/websocket"
 	"github.com/rs/cors"
+	"go.uber.org/zap"
 	validator "gopkg.in/go-playground/validator.v9"
 
 	"github.com/labstack/echo"
@@ -28,11 +29,12 @@ var (
 // StartServer APIサーバを起動する
 func StartServer() {
 	logger := logger.GetLogger()
-	mongoIns := db.MongoInstance{
-		Conf: config.GetDBConfig(),
+	mongoIns, err := db.NewMongoInstance()
+	if err != nil {
+		logger.Panic("Failed to connect database.", zap.Skip())
 	}
 	h := handler{
-		db:     &mongoIns,
+		db:     mongoIns,
 		logger: logger,
 	}
 
@@ -48,16 +50,20 @@ func StartServer() {
 	e.Validator = &customValidator{validator: validator.New()}
 
 	// API Version 1 Base
-	v1 := e.Group("/v1")
+	v1 := e.Group(apiConfig.Version)
 
-	// /v1/signup Handler
-	v1.POST("/signup", h.signupHandler)
-	// /v1/login Handler
-	v1.POST("/login", h.loginHandler)
+	account := v1.Group("/account")
+	account.POST("/create.json", h.signupHandler)
+	account.POST("/login.json", h.loginHandler)
 
 	// JWT RESTRICTED
 	v1j := v1.Group("")
 	v1j.Use(middleware.JWT([]byte(apiConfig.Jwt)))
+
+	account.GET("/settings.json", h.getSettingsHandler)
+	accountj := v1j.Group("/account")
+	accountj.POST("/settings.json", h.setSettingsHandler)
+	accountj.POST("/update_profile_image.json", h.updateProfileImageHandler)
 
 	// /v1/posts Handlers(Restricted)
 	posts := v1j.Group("/posts")
@@ -73,9 +79,13 @@ func StartServer() {
 	v1j.POST("/suspend", h.userSuspendHandler)
 	v1j.POST("/official", h.setOfficalFlagHandler)
 
-	// Relationships
-	v1j.PUT("/follow/:id", h.followHandler)
-	v1j.PUT("/unfollow/:id", h.unfollowHandler)
+	// Static
+	v1j.Static("/static", "static")
+
+	// Friendship
+	friendshipj := v1j.Group("friendships")
+	friendshipj.PUT("/create,json", h.followHandler)
+	friendshipj.PUT("/destroy.json", h.unfollowHandler)
 	// Relations
 	v1.GET("/following/:id", h.followingListHandler)
 	v1.GET("/follower/:id", h.followerListHandler)

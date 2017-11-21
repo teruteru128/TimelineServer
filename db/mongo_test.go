@@ -49,7 +49,7 @@ func TestMain(m *testing.M) {
 
 func TestCreate(t *testing.T) {
 	dummy := models.NewUser("id", "password", "test@example.com", false)
-	err := ins.Create("users", dummy)
+	err := ins.Insert("users", dummy)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -58,11 +58,11 @@ func TestCreate(t *testing.T) {
 func TestDuplicated(t *testing.T) {
 	dummy := models.NewUser("dup", "password", "dup@example.com", false)
 	dummy2 := models.NewUser("dup", "password", "dup@example.com", false)
-	err := ins.Create("users", dummy)
+	err := ins.Insert("users", dummy)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	err = ins.Create("users", dummy2)
+	err = ins.Insert("users", dummy2)
 	if err == nil {
 		t.Errorf("Duplicated")
 	}

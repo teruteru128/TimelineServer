@@ -25,15 +25,15 @@ func TestFollowingListHandler(t *testing.T) {
 	u.Followers = append(u.Followers, follower1.ID)
 	u.Following = append(u.Following, following1.ID)
 
-	err := th.db.Create("users", u)
+	err := th.db.Insert("users", u)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	err = th.db.Create("users", follower1)
+	err = th.db.Insert("users", follower1)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	err = th.db.Create("users", following1)
+	err = th.db.Insert("users", following1)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -78,15 +78,15 @@ func TestFollowerListHandler(t *testing.T) {
 	u.Followers = append(u.Followers, follower1.ID)
 	u.Following = append(u.Following, following1.ID)
 
-	err := th.db.Create("users", u)
+	err := th.db.Insert("users", u)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	err = th.db.Create("users", follower1)
+	err = th.db.Insert("users", follower1)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	err = th.db.Create("users", following1)
+	err = th.db.Insert("users", following1)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -133,7 +133,7 @@ func TestFollowingEmptyListHandler(t *testing.T) {
 
 	u := models.NewUser("yaju2", "password", "yaju2@example.com", false)
 
-	err := th.db.Create("users", u)
+	err := th.db.Insert("users", u)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -169,7 +169,7 @@ func TestFollowerEmptyListHandler(t *testing.T) {
 
 	u := models.NewUser("yjsnpi", "password", "yjsnpi@example.com", false)
 
-	err := th.db.Create("users", u)
+	err := th.db.Insert("users", u)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -204,11 +204,11 @@ func TestFollowHandler(t *testing.T) {
 	u := models.NewUser("fromkitten", "password", "fromkitten@example.com", false)
 	followUser := models.NewUser("tokotten", "password", "tokotten@example.com", false)
 
-	err := th.db.Create("users", u)
+	err := th.db.Insert("users", u)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	err = th.db.Create("users", followUser)
+	err = th.db.Insert("users", followUser)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -266,11 +266,11 @@ func TestUnfollowHandler(t *testing.T) {
 	u := models.NewUser("fromkitten2", "password", "fromkitten2@example.com", false)
 	unfollowUser := models.NewUser("tokotten2", "password", "tokotten2@example.com", false)
 
-	err := th.db.Create("users", u)
+	err := th.db.Insert("users", u)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	err = th.db.Create("users", unfollowUser)
+	err = th.db.Insert("users", unfollowUser)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

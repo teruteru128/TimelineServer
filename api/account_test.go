@@ -91,7 +91,7 @@ func TestLoginHandler(t *testing.T) {
 		t.Error(err)
 	}
 	u := models.NewUser("haa", hashed, "haa@example.com", false)
-	err = th.db.Create("users", u)
+	err = th.db.Insert("users", u)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -159,7 +159,7 @@ func TestLoginHandlerSuspended(t *testing.T) {
 	}
 	u := models.NewUser("maguro", hashed, "maguro@example.com", false)
 	u.Suspended = true
-	err = th.db.Create("users", u)
+	err = th.db.Insert("users", u)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -186,7 +186,7 @@ func TestLoginHandlerSuspended(t *testing.T) {
 func TestGetUserHandler(t *testing.T) {
 	e := echo.New()
 	u := models.NewUser("nagura", "password", "nagura@example.com", false)
-	err := th.db.Create("users", u)
+	err := th.db.Insert("users", u)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -208,7 +208,7 @@ func TestGetUserHandler(t *testing.T) {
 func TestUserDeleteHandler(t *testing.T) {
 	e := echo.New()
 	u := models.NewUser("nabra", "password", "nabra@example.com", false)
-	err := th.db.Create("users", u)
+	err := th.db.Insert("users", u)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

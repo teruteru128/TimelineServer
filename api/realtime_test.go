@@ -11,19 +11,19 @@ import (
 
 func TestCheckFollow_Followers(t *testing.T) {
 	follower := models.NewUser("follower1", "password", "follower1@example.com", false)
-	err := th.db.Create("users", follower)
+	err := th.db.Insert("users", follower)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 	followee := models.NewUser("followee1", "password", "followee1@example.com", false)
-	err = th.db.Create("users", followee)
+	err = th.db.Insert("users", followee)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 	u := models.NewUser("hagehoge", "password", "hagehoge@example.com", false)
 	u.Followers = append(u.Followers, follower.ID)
 	u.Following = append(u.Following, followee.ID)
-	err = th.db.Create("users", u)
+	err = th.db.Insert("users", u)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -43,13 +43,13 @@ func TestCheckFollow_Followers(t *testing.T) {
 }
 func TestCheckFollow_Own(t *testing.T) {
 	follow := models.NewUser("Luigi", "password", "Luigi@example.com", false)
-	err := th.db.Create("users", follow)
+	err := th.db.Insert("users", follow)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 	u := models.NewUser("Mario", "password", "Mario@example.com", false)
 	u.Following = append(u.Following, follow.ID)
-	err = th.db.Create("users", u)
+	err = th.db.Insert("users", u)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -75,14 +75,14 @@ func TestCheckFollow_Followings(t *testing.T) {
 	wario := models.NewUser("Wario", "password", "Wario@example.com", false)
 	wario.ID = warioID
 	wario.Followers = append(wario.Followers, waluigiID)
-	err := th.db.Create("users", wario)
+	err := th.db.Insert("users", wario)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 	u := models.NewUser("Waluigi", "password", "waluigi@example.com", false)
 	u.ID = waluigiID
 	u.Following = append(u.Following, warioID)
-	err = th.db.Create("users", u)
+	err = th.db.Insert("users", u)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

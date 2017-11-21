@@ -36,12 +36,11 @@ func (m *MongoInstance) createPostCollection(col string) error {
 */
 
 func (m *MongoInstance) GetAllPosts() (*[]models.Post, error) {
-	conn, err := m.getConnection()
-	if err != nil {
-		return nil, handleError(err)
-	}
+	sess := m.session.Clone()
+	defer sess.Close()
+
 	var posts []models.Post
-	if err := conn.C(PostsCol).
+	if err := sess.DB(m.db()).C(PostsCol).
 		Find(nil).
 		All(&posts); err != nil {
 		return nil, err
@@ -51,12 +50,11 @@ func (m *MongoInstance) GetAllPosts() (*[]models.Post, error) {
 }
 
 func (m *MongoInstance) GetPosts(limit int) (*[]models.Post, error) {
-	conn, err := m.getConnection()
-	if err != nil {
-		return nil, handleError(err)
-	}
+	sess := m.session.Clone()
+	defer sess.Close()
+
 	var posts []models.Post
-	if err := conn.C(PostsCol).
+	if err := sess.DB(m.db()).C(PostsCol).
 		Find(nil).
 		Limit(limit).
 		All(&posts); err != nil {

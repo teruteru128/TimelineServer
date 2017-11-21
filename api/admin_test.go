@@ -61,7 +61,7 @@ func TestUserSuspendHandler(t *testing.T) {
 	e := echo.New()
 
 	u := models.NewUser("susp", "password", "susp@example.com", false)
-	err := th.db.Create("users", u)
+	err := th.db.Insert("users", u)
 	if err != nil {
 		t.Error(err)
 	}
@@ -101,7 +101,7 @@ func TestSetOfficialFlagHandler(t *testing.T) {
 	e := echo.New()
 
 	u := models.NewUser("erai", "password", "erai@example.com", false)
-	err := th.db.Create("users", u)
+	err := th.db.Insert("users", u)
 	if err != nil {
 		t.Error(err)
 	}

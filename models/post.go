@@ -8,10 +8,10 @@ import (
 
 // Post 投稿の構造体
 type Post struct {
-	UserID      string        `json:"userId"` // 投稿したユーザのID
-	PostID      bson.ObjectId `json:"postId"` // 一意な投稿ID
-	Text        string        `json:"text"`
-	CreatedDate time.Time     `json:"createdDate"`
+	UserID      string        `bson:"userId"` // 投稿したユーザのID
+	PostID      bson.ObjectId `bson:"postId"` // 一意な投稿ID
+	Text        string        `bson:"text"`
+	CreatedDate time.Time     `bson:"createdDate"`
 }
 
 func NewPost(uid, text string) *Post {

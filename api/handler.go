@@ -28,21 +28,23 @@ func (cv *customValidator) Validate(i interface{}) error {
 }
 
 const (
-	ErrParamsRequired = "parameters required"
-	ErrBadFormat      = "bad format"
-	ErrLoginFailed    = "login failed"
-	ErrUnknown        = "unknown error"
-	ErrNotFound       = "not found"
-	ErrSuspended      = "account suspended"
-	RespCreated       = "created"
-	RespDeleted       = "deleted"
-	RespSuspended     = "suspended"
-	ErrDuplicated     = "resource duplicated"
-	ErrTooLong        = "post text too long"
-	RespFollowed      = "followed"
-	RespUnfollowed    = "unfollowed"
-	ErrAdminOnly      = "administration area"
-	ErrInvalidJwt     = "invalid jwt token"
+	ErrParamsRequired    = "parameters required"
+	ErrBadFormat         = "bad format"
+	ErrLoginFailed       = "login failed"
+	ErrUnknown           = "unknown error"
+	ErrNotFound          = "not found"
+	ErrSuspended         = "account suspended"
+	RespCreated          = "created"
+	RespDeleted          = "deleted"
+	RespSuspended        = "suspended"
+	ErrDuplicated        = "resource duplicated"
+	ErrTooLong           = "post text too long"
+	RespFollowed         = "followed"
+	RespUnfollowed       = "unfollowed"
+	ErrAdminOnly         = "administration area"
+	ErrInvalidJwt        = "invalid jwt token"
+	ErrTooLargeImage     = "uploaded image is too large"
+	ErrMediaNotSupported = "uploaded media type is not supported"
 )
 
 func handleMgoError(err error) *echo.HTTPError {

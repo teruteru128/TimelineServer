@@ -7,11 +7,11 @@ func TestGetPosts(t *testing.T) {
 	p0 := models.NewPost("siketyan", "hoge")
 	p1 := models.NewPost("homo", "fuga")
 
-	err := ins.Create("posts", p0)
+	err := ins.Insert("posts", p0)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	err = ins.Create("posts", p1)
+	err = ins.Insert("posts", p1)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -41,11 +41,11 @@ func TestLimitedGetPosts(t *testing.T) {
 	p0 := models.NewPost("siketyan", "hoge")
 	p1 := models.NewPost("homo", "fuga")
 
-	err := ins.Create("posts", p0)
+	err := ins.Insert("posts", p0)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	err = ins.Create("posts", p1)
+	err = ins.Insert("posts", p1)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

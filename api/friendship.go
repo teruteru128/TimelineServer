@@ -14,26 +14,35 @@ type (
 	usersResponse struct {
 		Users []models.UserResponse `json:"users"`
 	}
+	basicRequest struct {
+		DisplayName string `json:"displayName"`
+		UserID      string `json:"userId"`
+	}
 )
 
 func (h *handler) followHandler(c echo.Context) error {
 	jwtUser := c.Get("user").(*jwt.Token)
 	claims := jwtUser.Claims.(jwt.MapClaims)
 	idStr := claims["id"].(string)
-	objID := bson.ObjectId(bson.ObjectIdHex(idStr))
 
-	displayName := c.Param("id")
-	followUser, err := h.db.FindUser(displayName)
+	req := new(basicRequest)
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusInternalServerError, &messageResponse{Message: ErrUnknown})
+	}
+
+	followUser, err := h.db.FindUser(req.DisplayName)
 	if err != nil {
 		return handleMgoError(err)
 	}
 
-	err = h.db.FollowUser(objID, followUser.ID)
+	err = h.db.FollowUser(bson.ObjectId(idStr), followUser.ID)
 	if err != nil {
 		return handleMgoError(err)
 	}
 
-	return c.JSON(http.StatusOK, &messageResponse{Message: RespFollowed})
+	resp := models.UserToUserResponse(*followUser)
+
+	return c.JSON(http.StatusOK, &resp)
 }
 
 func (h *handler) unfollowHandler(c echo.Context) error {
@@ -42,18 +51,24 @@ func (h *handler) unfollowHandler(c echo.Context) error {
 	idStr := claims["id"].(string)
 	objID := bson.ObjectId(bson.ObjectIdHex(idStr))
 
-	displayName := c.Param("id")
-	followUser, err := h.db.FindUser(displayName)
+	req := new(basicRequest)
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusInternalServerError, &messageResponse{Message: ErrUnknown})
+	}
+
+	removeUser, err := h.db.FindUser(req.DisplayName)
 	if err != nil {
 		return handleMgoError(err)
 	}
 
-	err = h.db.UnfollowUser(objID, followUser.ID)
+	err = h.db.UnfollowUser(objID, removeUser.ID)
 	if err != nil {
 		return handleMgoError(err)
 	}
 
-	return c.JSON(http.StatusOK, &messageResponse{Message: RespUnfollowed})
+	resp := models.UserToUserResponse(*removeUser)
+
+	return c.JSON(http.StatusOK, &resp)
 }
 
 func (h *handler) followingListHandler(c echo.Context) error {

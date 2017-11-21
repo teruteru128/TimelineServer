@@ -1,12 +1,21 @@
 [API]
 port = 8080
-version = "v1"
+version = "1.0"
 debug = true
 endpoint = ""
 jwt = ""
 
 [DB]
-server = ""
-database = ""
+server = "localhost:27017"
+database = "timeline"
 user = ""
 password = ""
+
+[Cache]
+server = "localhost"
+port = 6379
+user = ""
+password = ""
+
+[UploadImage]
+path = "uploads/img/"

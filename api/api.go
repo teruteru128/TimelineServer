@@ -54,15 +54,11 @@ func StartServer() {
 	accountj.POST("/settings.json", h.setSettingsHandler)
 	accountj.POST("/update_profile_image.json", h.updateProfileImageHandler)
 
-	// /v1/posts Handlers(Restricted)
-	posts := v1j.Group("/posts")
-	posts.POST("/update_status.json", h.updateStatusHandler)
-	// /v1/posts/public Handlers(Restricted)
 	v1.GET("/posts/public", h.getPublicPostsHandler)
 
 	// Not restricted /users
 	users := v1.Group("/users")
-	users.GET("/:id", h.getUserHandler)
+	users.GET("/show.json", h.getUserHandler)
 
 	// Administrator
 	superj := v1j.Group("/super")
@@ -71,7 +67,7 @@ func StartServer() {
 	superj.DELETE("destroy_user.json/:id", h.userDeleteHandler)
 
 	// Static
-	v1j.Static("/static", "static")
+	v1.Static("/static", "static")
 
 	// Friendship
 	friendshipj := v1j.Group("friendships")
@@ -84,7 +80,7 @@ func StartServer() {
 	followers.GET("/ids.json", h.followerIdsHandler)
 	followers.GET("/list.json", h.followerListHandler)
 
-	statusesj := v1.Group("/statuses")
+	statusesj := v1j.Group("/statuses")
 	statusesj.POST("/update.json", h.updateStatusHandler)
 
 	// Socket.io

@@ -64,7 +64,7 @@ func (h *handler) socketIOHandler() http.Handler {
 				if err != nil {
 					handleMgoError(err)
 				}
-				resp, err := h.newPostResponse(post)
+				resp, err := h.newPostResponse(post, "")
 				if err != nil {
 					handleMgoError(err)
 				}
@@ -74,10 +74,15 @@ func (h *handler) socketIOHandler() http.Handler {
 					return
 				}
 
+				if post.UserID.Hex() == claimID {
+					so.Emit(claimID, string(j))
+					h.logger.Debug(loggerTopic, zap.Any("Sent", claimID))
+				}
+
 				for _, follow := range me.Following {
 					if follow == post.UserID {
-						so.Emit(follow.Hex(), string(j))
-						h.logger.Debug(loggerTopic, zap.Any("Sent", follow.Hex()))
+						so.Emit(claimID, string(j))
+						h.logger.Debug(loggerTopic, zap.Any("Sent", claimID))
 					}
 				}
 			}
@@ -90,7 +95,7 @@ func (h *handler) socketIOHandler() http.Handler {
 						handleMgoError(err)
 					}
 
-					resp, err := h.newPostResponse(post)
+					resp, err := h.newPostResponse(post, "")
 					if err != nil {
 						handleMgoError(err)
 					}
@@ -105,6 +110,11 @@ func (h *handler) socketIOHandler() http.Handler {
 
 					if len(sender.Followers) == 0 {
 						continue
+					}
+
+					if post.UserID.Hex() == claimID {
+						so.Emit(claimID, string(j))
+						h.logger.Debug(loggerTopic, zap.Any("Sent", claimID))
 					}
 
 					for _, follower := range sender.Followers {

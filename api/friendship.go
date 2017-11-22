@@ -12,7 +12,7 @@ import (
 )
 
 type (
-	basicRequest struct {
+	BasicRequest struct {
 		DisplayName string `json:"screen_name"`
 		UserID      string `json:"user_id"`
 	}
@@ -26,18 +26,24 @@ func (h *handler) followHandler(c echo.Context) error {
 	claims := jwtUser.Claims.(jwt.MapClaims)
 	idStr := claims["id"].(string)
 
-	req := new(basicRequest)
+	req := new(BasicRequest)
 	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusInternalServerError, &messageResponse{Message: ErrUnknown})
 	}
 
-	followUser := &models.User{}
 	if req.DisplayName != "" {
 		f, err := h.db.FindUser(req.DisplayName)
 		if err != nil {
 			return handleMgoError(err)
 		}
-		followUser = f
+		err = h.db.FollowUser(bson.ObjectId(idStr), f.ID)
+		if err != nil {
+			return handleMgoError(err)
+		}
+
+		resp := models.UserToUserResponse(*f)
+
+		return c.JSON(http.StatusOK, &resp)
 	}
 
 	if req.UserID != "" {
@@ -45,22 +51,18 @@ func (h *handler) followHandler(c echo.Context) error {
 		if err != nil {
 			return handleMgoError(err)
 		}
-		followUser = f
+		err = h.db.FollowUser(bson.ObjectId(idStr), f.ID)
+		if err != nil {
+			return handleMgoError(err)
+		}
+
+		resp := models.UserToUserResponse(*f)
+
+		return c.JSON(http.StatusOK, &resp)
 	}
 
-	if req.UserID == "" && req.DisplayName == "" {
-		h.logger.Debug("API Error", zap.String("Error", ErrParamsRequired))
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrParamsRequired}
-	}
-
-	err := h.db.FollowUser(bson.ObjectId(idStr), followUser.ID)
-	if err != nil {
-		return handleMgoError(err)
-	}
-
-	resp := models.UserToUserResponse(*followUser)
-
-	return c.JSON(http.StatusOK, &resp)
+	h.logger.Debug("API Error", zap.String("Error", ErrParamsRequired))
+	return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrParamsRequired}
 }
 
 func (h *handler) unfollowHandler(c echo.Context) error {
@@ -68,18 +70,24 @@ func (h *handler) unfollowHandler(c echo.Context) error {
 	claims := jwtUser.Claims.(jwt.MapClaims)
 	idStr := claims["id"].(string)
 
-	req := new(basicRequest)
+	req := new(BasicRequest)
 	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusInternalServerError, &messageResponse{Message: ErrUnknown})
 	}
 
-	removeUser := &models.User{}
 	if req.DisplayName != "" {
 		f, err := h.db.FindUser(req.DisplayName)
 		if err != nil {
 			return handleMgoError(err)
 		}
-		removeUser = f
+		err = h.db.UnfollowUser(bson.ObjectId(idStr), f.ID)
+		if err != nil {
+			return handleMgoError(err)
+		}
+
+		resp := models.UserToUserResponse(*f)
+
+		return c.JSON(http.StatusOK, &resp)
 	}
 
 	if req.UserID != "" {
@@ -87,22 +95,19 @@ func (h *handler) unfollowHandler(c echo.Context) error {
 		if err != nil {
 			return handleMgoError(err)
 		}
-		removeUser = f
+		err = h.db.UnfollowUser(bson.ObjectId(idStr), f.ID)
+		if err != nil {
+			return handleMgoError(err)
+		}
+
+		resp := models.UserToUserResponse(*f)
+
+		return c.JSON(http.StatusOK, &resp)
 	}
 
-	if req.UserID == "" && req.DisplayName == "" {
-		h.logger.Debug("API Error", zap.String("Error", ErrParamsRequired))
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrParamsRequired}
-	}
+	h.logger.Debug("API Error", zap.String("Error", ErrParamsRequired))
+	return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrParamsRequired}
 
-	err := h.db.UnfollowUser(bson.ObjectId(idStr), removeUser.ID)
-	if err != nil {
-		return handleMgoError(err)
-	}
-
-	resp := models.UserToUserResponse(*removeUser)
-
-	return c.JSON(http.StatusOK, &resp)
 }
 
 func (h *handler) friendsIdsHandler(c echo.Context) error {

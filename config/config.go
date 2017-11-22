@@ -17,7 +17,7 @@ type Config struct {
 
 // APIConfig API設定構造体
 type APIConfig struct {
-	Port     uint   `toml:"port"`
+	Port     int    `toml:"port"`
 	Version  string `toml:"version"`
 	Debug    bool   `toml:"debug"`
 	Endpoint string `toml:"endpoint"`

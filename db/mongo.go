@@ -90,3 +90,15 @@ func (m *MongoInstance) Insert(key string, data interface{}) error {
 
 	return sess.DB(m.db()).C(key).Insert(data)
 }
+
+func (m *MongoInstance) InsertWithCache(key string, data interface{}) error {
+	sess := m.session.Clone()
+	defer sess.Close()
+
+	_, err := m.cache.SetStruct(key, data)
+	if err != nil {
+		m.logger.Debug("Redis Error", zap.String("Error", err.Error()))
+	}
+
+	return sess.DB(m.db()).C(key).Insert(data)
+}

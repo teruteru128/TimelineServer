@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 
 	"gopkg.in/mgo.v2/bson"
 
@@ -110,15 +111,44 @@ func (h *handler) loginHandler(c echo.Context) error {
 }
 
 func (h *handler) getUserHandler(c echo.Context) error {
-	id := c.Param("id")
-
-	u, err := h.db.FindUser(id)
+	// Jwtチェック
+	config := config.GetAPIConfig()
+	tokenStr := c.QueryParam("token")
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(config.Jwt), nil
+	})
 	if err != nil {
 		h.logger.Debug("API Error", zap.String("Error", err.Error()))
-		return handleMgoError(err)
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
 	}
-	resp := models.UserToUserResponse(*u)
-	return c.JSON(http.StatusOK, resp)
+	if !token.Valid {
+		h.logger.Debug("API Error", zap.String("Error", err.Error()))
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+
+	screenName := c.QueryParam("screen_name")
+	userId := c.QueryParam("user_id")
+
+	if screenName != "" {
+		user, err := h.db.FindUser(screenName)
+		if err != nil {
+			return handleMgoError(err)
+		}
+		resp := models.UserToUserResponse(*user)
+		return c.JSON(http.StatusOK, resp)
+	}
+
+	if userId != "" {
+		user, err := h.db.FindUserByOID(bson.ObjectId(userId))
+		if err != nil {
+			return handleMgoError(err)
+		}
+		resp := models.UserToUserResponse(*user)
+		return c.JSON(http.StatusOK, resp)
+	}
+
+	h.logger.Debug("API Error", zap.String("Error", ErrParamsRequired))
+	return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrParamsRequired}
 }
 
 func (h *handler) userDeleteHandler(c echo.Context) error {
@@ -259,7 +289,8 @@ func (h *handler) updateProfileImageHandler(c echo.Context) error {
 	}
 
 	cfg := config.GetAPIConfig()
-	avatarUrl := "https://" + cfg.Endpoint + "/" + cfg.Version + "/" + filePath
+	portStr := strconv.Itoa(cfg.Port)
+	avatarUrl := "https://" + cfg.Endpoint + ":" + portStr + "/" + cfg.Version + "/" + filePath
 	err = h.db.UpdateUser(id, "avatarUrl", avatarUrl)
 	if err != nil {
 		h.logger.Debug("API Error", zap.String("Error", err.Error()))

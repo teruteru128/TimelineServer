@@ -54,7 +54,7 @@ func GetConfig() Config {
 			Port:     8080,
 			Version:  "v1",
 			Debug:    true,
-			Endpoint: "",
+			Endpoint: "tlstag.ddns.net",
 			Jwt:      MockJwtToken,
 		}
 		mockDBConfig := DBConfig{

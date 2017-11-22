@@ -1,15 +1,13 @@
-package api
+package v1
 
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"unicode/utf8"
 
 	"go.uber.org/zap"
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/TinyKitten/TimelineServer/models"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
@@ -34,7 +32,7 @@ type (
 	}
 )
 
-func (h *handler) newPostResponse(post models.Post, replyToUserID string) (*PostResponse, error) {
+func (h *APIHandler) newPostResponse(post models.Post, replyToUserID string) (*PostResponse, error) {
 	sender, err := h.db.FindUserByOID(post.UserID)
 	if err != nil {
 		return nil, err
@@ -80,31 +78,7 @@ func (h *handler) newPostResponse(post models.Post, replyToUserID string) (*Post
 	}, nil
 }
 
-func (h *handler) getPublicPostsHandler(c echo.Context) error {
-	// Jwtチェック
-	config := config.GetAPIConfig()
-	tokenStr := c.QueryParam("token")
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		return []byte(config.Jwt), nil
-	})
-	if err != nil {
-		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
-	}
-	if !token.Valid {
-		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
-	}
-
-	limit, _ := strconv.Atoi(c.QueryParam("limit"))
-
-	posts, err := h.db.GetPosts(limit)
-	if err != nil {
-		return handleMgoError(err)
-	}
-
-	return c.JSON(http.StatusOK, posts)
-}
-
-func (h *handler) updateStatusHandler(c echo.Context) error {
+func (h *APIHandler) UpdateStatus(c echo.Context) error {
 	jwtUser := c.Get("user").(*jwt.Token)
 	claims := jwtUser.Claims.(jwt.MapClaims)
 	idStr := claims["id"].(string)

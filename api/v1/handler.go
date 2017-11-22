@@ -1,9 +1,11 @@
-package api
+package v1
 
 import (
 	"net/http"
 
+	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/TinyKitten/TimelineServer/db"
+	"github.com/TinyKitten/TimelineServer/logger"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	validator "gopkg.in/go-playground/validator.v9"
@@ -11,7 +13,7 @@ import (
 )
 
 type (
-	handler struct {
+	APIHandler struct {
 		db     *db.MongoInstance
 		logger *zap.Logger
 	}
@@ -22,6 +24,21 @@ type (
 		Message string `json:"message"`
 	}
 )
+
+func NewHandler() APIHandler {
+	logger := logger.GetLogger()
+	conf := config.GetDBConfig()
+	cacheConf := config.GetCacheConfig()
+	mongoIns, err := db.NewMongoInstance(conf, cacheConf)
+	if err != nil {
+		logger.Panic("Failed to connect database.", zap.Skip())
+	}
+	return APIHandler{
+		db:     mongoIns,
+		logger: logger,
+	}
+
+}
 
 func (cv *customValidator) Validate(i interface{}) error {
 	return cv.validator.Struct(i)

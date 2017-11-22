@@ -1,4 +1,4 @@
-package api
+package v1
 
 import (
 	"encoding/json"
@@ -17,7 +17,7 @@ var postChan = make(chan models.Post)
 
 const loggerTopic = "Socket.io"
 
-func (h *handler) socketIOHandler() http.Handler {
+func (h *APIHandler) SocketIO() http.Handler {
 	server, err := socketio.NewServer(nil)
 	if err != nil {
 		log.Fatal(err)

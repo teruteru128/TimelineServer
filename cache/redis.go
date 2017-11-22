@@ -14,9 +14,8 @@ type RedisInstance struct {
 	pool *redis.Pool
 }
 
-func newPool() *redis.Pool {
-	cfg := config.GetCacheConfig()
-	port := strconv.Itoa(cfg.Port)
+func newPool(conf config.CacheConfig) *redis.Pool {
+	port := strconv.Itoa(conf.Port)
 	host := ":" + port
 	return &redis.Pool{
 		MaxIdle:     3,
@@ -25,8 +24,8 @@ func newPool() *redis.Pool {
 	}
 }
 
-func NewRedisInstance() RedisInstance {
-	pool := newPool()
+func NewRedisInstance(conf config.CacheConfig) RedisInstance {
+	pool := newPool(conf)
 	ins := RedisInstance{
 		pool: pool,
 	}
@@ -35,6 +34,10 @@ func NewRedisInstance() RedisInstance {
 
 func handleError(err error) error {
 	logger := logger.GetLogger()
-	logger.Debug("Redis Error", zap.String("Error", err.Error()))
+	if err == redis.ErrNil {
+		logger.Info("Redis Info", zap.String("Error", err.Error()))
+		return nil
+	}
+	logger.Error("Redis Error", zap.String("Error", err.Error()))
 	return err
 }

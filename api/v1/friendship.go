@@ -1,4 +1,4 @@
-package api
+package v1
 
 import (
 	"net/http"
@@ -21,7 +21,7 @@ type (
 	}
 )
 
-func (h *handler) followHandler(c echo.Context) error {
+func (h *APIHandler) Follow(c echo.Context) error {
 	jwtUser := c.Get("user").(*jwt.Token)
 	claims := jwtUser.Claims.(jwt.MapClaims)
 	idStr := claims["id"].(string)
@@ -65,7 +65,7 @@ func (h *handler) followHandler(c echo.Context) error {
 	return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrParamsRequired}
 }
 
-func (h *handler) unfollowHandler(c echo.Context) error {
+func (h *APIHandler) Unfollow(c echo.Context) error {
 	jwtUser := c.Get("user").(*jwt.Token)
 	claims := jwtUser.Claims.(jwt.MapClaims)
 	idStr := claims["id"].(string)
@@ -110,7 +110,7 @@ func (h *handler) unfollowHandler(c echo.Context) error {
 
 }
 
-func (h *handler) friendsIdsHandler(c echo.Context) error {
+func (h *APIHandler) GetFriendsID(c echo.Context) error {
 	config := config.GetAPIConfig()
 	tokenStr := c.QueryParam("token")
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
@@ -139,7 +139,7 @@ func (h *handler) friendsIdsHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, &FollowerResponse{Ids: user.Following})
 }
 
-func (h *handler) followerIdsHandler(c echo.Context) error {
+func (h *APIHandler) GetFollowersID(c echo.Context) error {
 	// Jwtチェック
 	config := config.GetAPIConfig()
 	tokenStr := c.QueryParam("token")
@@ -178,7 +178,7 @@ func (h *handler) followerIdsHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, &FollowerResponse{Ids: user.Followers})
 }
 
-func (h *handler) followerListHandler(c echo.Context) error {
+func (h *APIHandler) GetFollowerList(c echo.Context) error {
 	// Jwtチェック
 	config := config.GetAPIConfig()
 	tokenStr := c.QueryParam("token")
@@ -224,7 +224,7 @@ func (h *handler) followerListHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-func (h *handler) friendsListHandler(c echo.Context) error {
+func (h *APIHandler) GetFriendsList(c echo.Context) error {
 	// Jwtチェック
 	config := config.GetAPIConfig()
 	tokenStr := c.QueryParam("token")

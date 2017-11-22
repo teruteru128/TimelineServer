@@ -1,4 +1,4 @@
-package api
+package v1
 
 import (
 	"net/http"
@@ -44,7 +44,7 @@ type (
 	}
 )
 
-func (h *handler) signupHandler(c echo.Context) error {
+func (h *APIHandler) AccountCreate(c echo.Context) error {
 	reqUser := new(SignupReq)
 	if err := c.Bind(reqUser); err != nil {
 		h.logger.Debug("API Error", zap.String("Error", err.Error()))
@@ -76,7 +76,7 @@ func (h *handler) signupHandler(c echo.Context) error {
 	return c.JSON(http.StatusCreated, resp)
 }
 
-func (h *handler) loginHandler(c echo.Context) error {
+func (h *APIHandler) Login(c echo.Context) error {
 	reqUser := new(LoginReq)
 	if err := c.Bind(reqUser); err != nil {
 		h.logger.Debug("API Error", zap.String("Error", err.Error()))
@@ -110,7 +110,7 @@ func (h *handler) loginHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-func (h *handler) getUserHandler(c echo.Context) error {
+func (h *APIHandler) GetUser(c echo.Context) error {
 	// Jwtチェック
 	config := config.GetAPIConfig()
 	tokenStr := c.QueryParam("token")
@@ -151,7 +151,7 @@ func (h *handler) getUserHandler(c echo.Context) error {
 	return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrParamsRequired}
 }
 
-func (h *handler) userDeleteHandler(c echo.Context) error {
+func (h *APIHandler) AccountDelete(c echo.Context) error {
 	id := c.Param("id")
 
 	err := h.db.DeleteUser(id)
@@ -162,7 +162,7 @@ func (h *handler) userDeleteHandler(c echo.Context) error {
 	return c.JSON(http.StatusNoContent, &messageResponse{Message: RespDeleted})
 }
 
-func (h *handler) getSettingsHandler(c echo.Context) error {
+func (h *APIHandler) GetAccountSettings(c echo.Context) error {
 	// Jwtチェック
 	config := config.GetAPIConfig()
 	tokenStr := c.QueryParam("token")
@@ -191,7 +191,7 @@ func (h *handler) getSettingsHandler(c echo.Context) error {
 	})
 }
 
-func (h *handler) setSettingsHandler(c echo.Context) error {
+func (h *APIHandler) SetAccountSettings(c echo.Context) error {
 	jwtUser := c.Get("user").(*jwt.Token)
 	claims := jwtUser.Claims.(jwt.MapClaims)
 	idStr := claims["id"].(string)
@@ -247,7 +247,7 @@ func (h *handler) setSettingsHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-func (h *handler) updateProfileImageHandler(c echo.Context) error {
+func (h *APIHandler) UpdateAccountProfileImage(c echo.Context) error {
 	jwtUser := c.Get("user").(*jwt.Token)
 	claims := jwtUser.Claims.(jwt.MapClaims)
 	idStr := claims["id"].(string)

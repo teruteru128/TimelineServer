@@ -14,24 +14,24 @@ type MongoInstance struct {
 	session *mgo.Session
 	logger  zap.Logger
 	cache   cache.RedisInstance
+	conf    config.DBConfig
 }
 
 func handleError(err error) error {
 	logger := logger.GetLogger()
-	logger.Debug("MongoDB Error", zap.String("Reason", err.Error()))
+	logger.Error("MongoDB Error", zap.String("Reason", err.Error()))
 	return err
 }
 
 func (m *MongoInstance) url() string {
-	cfg := config.GetDBConfig()
-	if cfg.User == "" || cfg.Password == "" {
-		return cfg.Server
+	if m.conf.User == "" || m.conf.Password == "" {
+		return m.conf.Server
 	}
-	return cfg.User + ":" + cfg.Password + "@" + cfg.Server
+	return m.conf.User + ":" + m.conf.Password + "@" + m.conf.Server
 }
 
 func (m *MongoInstance) db() string {
-	return config.GetDBConfig().Database
+	return m.conf.Database
 }
 
 func setIndex(s *mgo.Database) error {
@@ -48,23 +48,23 @@ func setIndex(s *mgo.Database) error {
 	return err
 }
 
-func NewMongoInstance() (*MongoInstance, error) {
-	db := config.GetDBConfig().Database
+func NewMongoInstance(conf config.DBConfig, cacheConf config.CacheConfig) (*MongoInstance, error) {
 	m := MongoInstance{}
+	m.conf = conf
 	session, err := mgo.Dial(m.url())
 	if err != nil {
 		return nil, handleError(err)
 	}
 	session.SetSafe(&mgo.Safe{})
 	m.session = session
-	err = setIndex(session.DB(db))
+	err = setIndex(session.DB(m.conf.Database))
 	if err != nil {
 		return nil, err
 	}
 	logger := logger.GetLogger()
 	m.logger = *logger
 
-	redisInstance := cache.NewRedisInstance()
+	redisInstance := cache.NewRedisInstance(cacheConf)
 	m.cache = redisInstance
 	return &m, nil
 }

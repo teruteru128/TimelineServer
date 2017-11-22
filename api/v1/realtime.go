@@ -60,6 +60,7 @@ func (h *APIHandler) SocketIO() http.Handler {
 				h.logger.Debug(loggerTopic, zap.String("Error", err.Error()))
 			}
 			for _, post := range *posts {
+
 				me, err := h.db.FindUser(claimID)
 				if err != nil {
 					handleMgoError(err)
@@ -105,6 +106,10 @@ func (h *APIHandler) SocketIO() http.Handler {
 						h.logger.Debug(loggerTopic, zap.Any("Error", err.Error()))
 						continue
 					}
+
+					// UNION timeline
+					so.Emit("union", string(j))
+
 					so.Emit(claimID, string(j))
 					h.logger.Debug(loggerTopic, zap.Any("Sent", claimID))
 

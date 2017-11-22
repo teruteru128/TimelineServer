@@ -14,7 +14,7 @@ type Post struct {
 	MentionsID      []bson.ObjectId `bson:"mentionsId"`
 	URLs            []string        `bson:"urls"`
 	Hashtags        []string        `bson:"hashtags"`
-	InReplyToUserID bson.ObjectId   `bson:"in_reply_to_user_id"`
+	InReplyToUserID bson.ObjectId   `bson:"in_reply_to_user_id,omitempty"`
 	Text            string          `bson:"text"`
 	Shared          []bson.ObjectId `bson:"shared"`
 	UserID          bson.ObjectId   `bson:"user_id"`
@@ -26,25 +26,12 @@ type PostEntity struct {
 	UserMentions []Post   `json:"user_mentions"`
 }
 
-/*
-	Favorited           bool        `json:"favorited"`
-	CreatedAt           string      `json:"created_at"`
-	ID                  string      `json:"id"`
-	Entities            PostEntity  `json:"entities"`
-	InReplyToUserID     string      `json:"in_reply_to_user_id"`
-	Text                string      `json:"text"`
-	Shared              bool        `json:"shared"`
-	SharedCount         int         `json:"shared_count"`
-	User                models.User `json:"user"`
-	InReplyToScreenName string      `json:"in_reply_to_screen_name"`
-*/
-
-func NewPost(uid, text, inReplyToStatusID string) *Post {
+func NewPost(uid, inReplyToStatusID bson.ObjectId, text string) *Post {
 	return &Post{
-		UserID:          bson.ObjectId(uid),
+		UserID:          uid,
 		ID:              bson.NewObjectId(),
 		Text:            text,
 		CreatedAt:       time.Now(),
-		InReplyToUserID: bson.ObjectId(inReplyToStatusID),
+		InReplyToUserID: inReplyToStatusID,
 	}
 }

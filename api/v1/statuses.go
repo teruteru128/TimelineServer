@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 	"unicode/utf8"
 
@@ -82,7 +81,7 @@ func (h *APIHandler) UpdateStatus(c echo.Context) error {
 	jwtUser := c.Get("user").(*jwt.Token)
 	claims := jwtUser.Claims.(jwt.MapClaims)
 	idStr := claims["id"].(string)
-	objID := bson.ObjectId(bson.ObjectIdHex(idStr))
+	id := bson.ObjectIdHex(idStr)
 
 	req := new(PostReq)
 	if err := c.Bind(req); err != nil {
@@ -97,13 +96,12 @@ func (h *APIHandler) UpdateStatus(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusRequestEntityTooLarge, Message: ErrTooLong}
 	}
 
-	u, err := h.db.FindUserByOID(objID)
+	u, err := h.db.FindUserByOID(id)
 	if err != nil {
 		return handleMgoError(err)
 	}
 
-	newPost := models.NewPost(u.ID.Hex(), req.InReplyToStatusID, req.Status)
-	fmt.Println(newPost.Text)
+	newPost := models.NewPost(u.ID, bson.ObjectId(req.InReplyToStatusID), req.Status)
 
 	err = h.db.Insert("posts", newPost)
 	if err != nil {

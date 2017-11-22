@@ -195,7 +195,7 @@ func (h *APIHandler) SetAccountSettings(c echo.Context) error {
 	jwtUser := c.Get("user").(*jwt.Token)
 	claims := jwtUser.Claims.(jwt.MapClaims)
 	idStr := claims["id"].(string)
-	id := bson.ObjectId(bson.ObjectIdHex(idStr))
+	id := bson.ObjectIdHex(idStr)
 
 	req := new(AccountSettingsRequest)
 	if err := c.Bind(req); err != nil {
@@ -251,7 +251,7 @@ func (h *APIHandler) UpdateAccountProfileImage(c echo.Context) error {
 	jwtUser := c.Get("user").(*jwt.Token)
 	claims := jwtUser.Claims.(jwt.MapClaims)
 	idStr := claims["id"].(string)
-	id := bson.ObjectId(bson.ObjectIdHex(idStr))
+	id := bson.ObjectIdHex(idStr)
 
 	req := new(AccountImageRequest)
 	if err := c.Bind(req); err != nil {

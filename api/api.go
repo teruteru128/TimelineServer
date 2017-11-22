@@ -21,9 +21,10 @@ func StartServer() {
 	apiConfig := config.GetAPIConfig()
 	port := strconv.Itoa(apiConfig.Port)
 
-	host := apiConfig.Endpoint + ":" + port
-
-	r.AutoTLSManager.HostPolicy = autocert.HostWhitelist(apiConfig.Endpoint)
+	r.AutoTLSManager.HostPolicy = autocert.HostWhitelist("tlstag.ddns.net")
 	r.AutoTLSManager.Cache = autocert.DirCache(".cache")
-	r.Logger.Fatal(r.StartTLS(host, "cert.pem", "key.pem"))
+
+	host := ":" + port
+
+	r.Logger.Fatal(r.StartAutoTLS(host))
 }

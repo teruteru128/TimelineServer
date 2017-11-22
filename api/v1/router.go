@@ -5,12 +5,14 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/rs/cors"
+	validator "gopkg.in/go-playground/validator.v9"
 )
 
 func NewV1Router() *echo.Echo {
 	h := NewHandler()
 
 	e := echo.New()
+	e.Validator = &CustomValidator{validator: validator.New()}
 
 	apiConfig := config.GetAPIConfig()
 	v1 := e.Group(apiConfig.Version)
@@ -19,12 +21,9 @@ func NewV1Router() *echo.Echo {
 	account.POST("/create.json", h.AccountCreate)
 	account.POST("/login.json", h.Login)
 
-	// JWT RESTRICTED
-	v1j := v1.Group("")
-	v1j.Use(middleware.JWT([]byte(apiConfig.Jwt)))
-
 	account.GET("/settings.json", h.GetAccountSettings)
-	accountj := v1j.Group("/account")
+	accountj := v1.Group("/account")
+	accountj.Use(middleware.JWT([]byte(apiConfig.Jwt)))
 	accountj.POST("/settings.json", h.SetAccountSettings)
 	accountj.POST("/update_profile_image.json", h.UpdateAccountProfileImage)
 
@@ -32,7 +31,8 @@ func NewV1Router() *echo.Echo {
 	users.GET("/show.json", h.GetUser)
 
 	// Administrator
-	superj := v1j.Group("/super")
+	superj := v1.Group("/super")
+	superj.Use(middleware.JWT([]byte(apiConfig.Jwt)))
 	superj.POST("/update_suspend.json", h.AUserSuspendHandler)
 	superj.POST("/update_official.json", h.ASetOfficialFlag)
 
@@ -40,7 +40,8 @@ func NewV1Router() *echo.Echo {
 	v1.Static("/static", "static")
 
 	// Friendship
-	friendshipj := v1j.Group("friendships")
+	friendshipj := v1.Group("friendships")
+	friendshipj.Use(middleware.JWT([]byte(apiConfig.Jwt)))
 	friendshipj.POST("/create.json", h.Follow)
 	friendshipj.POST("/destroy.json", h.Unfollow)
 	friends := v1.Group("/friends")
@@ -50,7 +51,8 @@ func NewV1Router() *echo.Echo {
 	followers.GET("/ids.json", h.GetFollowersID)
 	followers.GET("/list.json", h.GetFollowerList)
 
-	statusesj := v1j.Group("/statuses")
+	statusesj := v1.Group("/statuses")
+	statusesj.Use(middleware.JWT([]byte(apiConfig.Jwt)))
 	statusesj.POST("/update.json", h.UpdateStatus)
 
 	// Socket.io

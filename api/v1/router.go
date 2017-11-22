@@ -11,10 +11,6 @@ func NewV1Router() *echo.Echo {
 	h := NewHandler()
 
 	e := echo.New()
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-	e.Pre(middleware.RemoveTrailingSlash())
-	e.Use(middleware.CORS())
 
 	apiConfig := config.GetAPIConfig()
 	v1 := e.Group(apiConfig.Version)

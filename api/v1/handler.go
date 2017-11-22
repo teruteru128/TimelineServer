@@ -17,13 +17,17 @@ type (
 		db     *db.MongoInstance
 		logger *zap.Logger
 	}
-	customValidator struct {
-		validator *validator.Validate
-	}
 	messageResponse struct {
 		Message string `json:"message"`
 	}
+	CustomValidator struct {
+		validator *validator.Validate
+	}
 )
+
+func (cv *CustomValidator) Validate(i interface{}) error {
+	return cv.validator.Struct(i)
+}
 
 func NewHandler() APIHandler {
 	logger := logger.GetLogger()
@@ -38,10 +42,6 @@ func NewHandler() APIHandler {
 		logger: logger,
 	}
 
-}
-
-func (cv *customValidator) Validate(i interface{}) error {
-	return cv.validator.Struct(i)
 }
 
 const (

@@ -20,13 +20,6 @@ func main() {
 		}()
 	}
 
-	defer func() {
-		err := recover()
-		if err != nil {
-			log.Println("panick recover. ", err)
-		}
-	}()
-
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	api.StartServer()

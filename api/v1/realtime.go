@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var postChan = make(chan models.Post)
+var postChan = make(chan models.Post, 100)
 
 const loggerTopic = "Socket.io"
 
@@ -52,7 +52,7 @@ func (h *APIHandler) SocketIO() http.Handler {
 
 			so.Emit("authenticated")
 
-			so.Join(claimID)
+			// so.Join(claimID)
 
 			// 初回送信
 			posts, err := h.db.GetAllPosts()
@@ -109,6 +109,7 @@ func (h *APIHandler) SocketIO() http.Handler {
 
 					// UNION timeline
 					so.Emit("union", string(j))
+					h.logger.Debug(loggerTopic, zap.Any("Sent", "UNION"))
 
 					so.Emit(claimID, string(j))
 					h.logger.Debug(loggerTopic, zap.Any("Sent", claimID))

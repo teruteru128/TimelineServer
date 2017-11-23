@@ -44,9 +44,11 @@ func NewV1Router() *echo.Echo {
 	friendshipj.Use(middleware.JWT([]byte(apiConfig.Jwt)))
 	friendshipj.POST("/create.json", h.Follow)
 	friendshipj.POST("/destroy.json", h.Unfollow)
+
 	friends := v1.Group("/friends")
 	friends.GET("/ids.json", h.GetFriendsID)
 	friends.GET("/list.json", h.GetFriendsList)
+
 	followers := v1.Group("/followers")
 	followers.GET("/ids.json", h.GetFollowersID)
 	followers.GET("/list.json", h.GetFollowerList)
@@ -54,6 +56,9 @@ func NewV1Router() *echo.Echo {
 	statusesj := v1.Group("/statuses")
 	statusesj.Use(middleware.JWT([]byte(apiConfig.Jwt)))
 	statusesj.POST("/update.json", h.UpdateStatus)
+
+	searchj := v1.Group("/search")
+	searchj.GET("/user.json", h.SearchUserHandler)
 
 	// Socket.io
 	c := cors.New(cors.Options{

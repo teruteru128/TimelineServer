@@ -222,6 +222,14 @@ func (m *MongoInstance) UpdateUser(objectID bson.ObjectId, key string, value int
 	return nil
 }
 
+func (m *MongoInstance) setUserArrayCache(key string, user []models.User) error {
+	_, err := m.cache.SetStruct(key, user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *MongoInstance) updateUserCache(u models.User) (err error) {
 	_, err = m.cache.SetStruct(u.ID.Hex(), u)
 	if err != nil {
@@ -232,4 +240,38 @@ func (m *MongoInstance) updateUserCache(u models.User) (err error) {
 		return err
 	}
 	return
+}
+
+func (m *MongoInstance) SearchUser(query string, limit int) (*[]models.User, error) {
+	sess := m.session.Clone()
+	defer sess.Close()
+
+	/*
+		data, err := m.cache.GetStruct(query)
+		if err != nil && err != redis.ErrNil {
+			return nil, err
+		}
+		if data != nil {
+			u := m.deserializeUserArray(data)
+			return u, nil
+		}
+	*/
+
+	u := []models.User{}
+	if err := sess.DB(m.db()).C(UsersCol).
+		Find(bson.M{"userId": bson.M{"$regex": bson.RegEx{Pattern: `^` + query + `.*`, Options: "m"}}}).
+		Limit(limit).
+		All(&u); err != nil {
+		return nil, err
+	}
+
+	/*
+		err = m.setUserArrayCache(query, u)
+		if err != nil {
+			m.logger.Debug("Redis Error", zap.String("Error", err.Error()))
+			return nil, err
+		}
+	*/
+
+	return &u, nil
 }

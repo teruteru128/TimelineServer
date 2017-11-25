@@ -14,12 +14,11 @@
 .glide/
 vendor/
 
-# Server configuration files
-config.toml
-
 static/
 .cache
 
 cert.pem
 key.pem
 TimelineServer
+
+uploads/img/*

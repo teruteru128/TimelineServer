@@ -1,8 +1,9 @@
-package api
+package v1
 
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/TinyKitten/TimelineServer/config"
@@ -12,7 +13,7 @@ import (
 	dockertest "gopkg.in/ory-am/dockertest.v3"
 )
 
-var th *handler
+var th *APIHandler
 
 func TestMain(m *testing.M) {
 	pool, err := dockertest.NewPool("")
@@ -24,16 +25,30 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("Could not start resource: %s", err)
 	}
+	redisResource, err := pool.Run("redis", "latest", []string{})
+	if err != nil {
+		log.Fatalf("Could not start resource: %s", err)
+	}
 
 	if err := pool.Retry(func() error {
 		conf := config.DBConfig{
 			Server:   fmt.Sprintf("localhost:%s", resource.GetPort("27017/tcp")),
 			Database: "testing",
 		}
-		ins := &db.MongoInstance{Conf: conf}
+		cachePort, err := strconv.Atoi(redisResource.GetPort("6379/tcp"))
+		if err != nil {
+			log.Fatal(err)
+		}
+		cacheConf := config.CacheConfig{
+			Port: cachePort,
+		}
+		ins, err := db.NewMongoInstance(conf, cacheConf)
+		if err != nil {
+			log.Fatalf("Could not getting mongo instance: %s", err)
+		}
 		logger := logger.GetLogger()
 
-		th = &handler{
+		th = &APIHandler{
 			db:     ins,
 			logger: logger,
 		}
@@ -45,6 +60,9 @@ func TestMain(m *testing.M) {
 
 	code := m.Run()
 	if err := pool.Purge(resource); err != nil {
+		log.Fatalf("Could not purge resource: %s", err)
+	}
+	if err := pool.Purge(redisResource); err != nil {
 		log.Fatalf("Could not purge resource: %s", err)
 	}
 	os.Exit(code)

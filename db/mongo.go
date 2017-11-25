@@ -1,6 +1,7 @@
 package db
 
 import (
+	"github.com/TinyKitten/TimelineServer/cache"
 	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/TinyKitten/TimelineServer/logger"
 	"go.uber.org/zap"
@@ -10,22 +11,27 @@ import (
 const loggerTopic = "MongoDB Error"
 
 type MongoInstance struct {
-	Conf    config.DBConfig
 	session *mgo.Session
 	logger  zap.Logger
+	cache   cache.RedisInstance
+	conf    config.DBConfig
 }
 
 func handleError(err error) error {
 	logger := logger.GetLogger()
-	logger.Debug("MongoDB Error", zap.String("Reason", err.Error()))
+	logger.Error("MongoDB Error", zap.String("Reason", err.Error()))
 	return err
 }
 
 func (m *MongoInstance) url() string {
-	if m.Conf.User == "" || m.Conf.Password == "" {
-		return m.Conf.Server
+	if m.conf.User == "" || m.conf.Password == "" {
+		return m.conf.Server
 	}
-	return m.Conf.User + ":" + m.Conf.Password + "@" + m.Conf.Server
+	return m.conf.User + ":" + m.conf.Password + "@" + m.conf.Server
+}
+
+func (m *MongoInstance) db() string {
+	return m.conf.Database
 }
 
 func setIndex(s *mgo.Database) error {
@@ -42,49 +48,57 @@ func setIndex(s *mgo.Database) error {
 	return err
 }
 
-func (m *MongoInstance) getConnection() (*mgo.Database, error) {
-	db := config.GetDBConfig().Database
-	if m.session != nil {
-		return m.session.DB(db), nil
-	}
+func NewMongoInstance(conf config.DBConfig, cacheConf config.CacheConfig) (*MongoInstance, error) {
+	m := MongoInstance{}
+	m.conf = conf
 	session, err := mgo.Dial(m.url())
 	if err != nil {
 		return nil, handleError(err)
 	}
-	session.SetMode(mgo.Monotonic, true)
 	session.SetSafe(&mgo.Safe{})
 	m.session = session
-	err = setIndex(session.DB(db))
+	err = setIndex(session.DB(m.conf.Database))
 	if err != nil {
 		return nil, err
 	}
 	logger := logger.GetLogger()
 	m.logger = *logger
-	return session.DB(db), nil
+
+	redisInstance := cache.NewRedisInstance(cacheConf)
+	m.cache = redisInstance
+	return &m, nil
 }
 
 func (m *MongoInstance) GetCollection(key string) (*mgo.Collection, error) {
-	conn, err := m.getConnection()
-	if err != nil {
-		return nil, handleError(err)
-	}
-	col := conn.C(key)
+	sess := m.session.Clone()
+	defer sess.Close()
+
+	col := sess.DB(m.db()).C(key)
 	return col, nil
 }
 
 func (m *MongoInstance) Ping() (err error) {
-	conn, err := m.getConnection()
-	err = conn.Session.Ping()
+	sess := m.session.Clone()
+	defer sess.Close()
+	err = sess.Ping()
 	return nil
 }
 
-func (m *MongoInstance) Create(key string, data interface{}) error {
-	conn, err := m.getConnection()
+func (m *MongoInstance) Insert(key string, data interface{}) error {
+	sess := m.session.Clone()
+	defer sess.Close()
+
+	return sess.DB(m.db()).C(key).Insert(data)
+}
+
+func (m *MongoInstance) InsertWithCache(key string, data interface{}) error {
+	sess := m.session.Clone()
+	defer sess.Close()
+
+	_, err := m.cache.SetStruct(key, data)
 	if err != nil {
-		return handleError(err)
+		m.logger.Debug("Redis Error", zap.String("Error", err.Error()))
 	}
-	if err != nil {
-		return handleError(err)
-	}
-	return conn.C(key).Insert(data)
+
+	return sess.DB(m.db()).C(key).Insert(data)
 }

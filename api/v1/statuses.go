@@ -10,6 +10,7 @@ import (
 	"github.com/TinyKitten/TimelineServer/models"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
+	"github.com/TinyKitten/TimelineServer/config"
 )
 
 type (
@@ -31,52 +32,6 @@ type (
 	}
 )
 
-func (h *APIHandler) newPostResponse(post models.Post, replyToUserID string) (*PostResponse, error) {
-	sender, err := h.db.FindUserByOID(post.UserID)
-	if err != nil {
-		return nil, err
-	}
-
-	senderResp := models.UserToUserResponse(*sender)
-
-	if replyToUserID != "" {
-		toReply, err := h.db.FindUserByOID(post.UserID)
-		if err != nil {
-			return nil, err
-		}
-		return &PostResponse{
-			Favorited: false,
-			CreatedAt: post.CreatedAt.String(),
-			ID:        post.ID.Hex(),
-			Entities: models.PostEntity{
-				URLs:         post.URLs,
-				Hashtags:     post.Hashtags,
-				UserMentions: []models.Post{},
-			},
-			Text:                post.Text,
-			Shared:              false,
-			SharedCount:         len(post.Shared),
-			User:                senderResp,
-			InReplyToScreenName: toReply.DisplayName,
-			InReplyToUserID:     toReply.UserID,
-		}, nil
-	}
-	return &PostResponse{
-		Favorited: false,
-		CreatedAt: post.CreatedAt.String(),
-		ID:        post.ID.Hex(),
-		Entities: models.PostEntity{
-			URLs:         post.URLs,
-			Hashtags:     post.Hashtags,
-			UserMentions: []models.Post{},
-		},
-		Text:        post.Text,
-		Shared:      false,
-		SharedCount: len(post.Shared),
-		User:        senderResp,
-	}, nil
-}
-
 func (h *APIHandler) UpdateStatus(c echo.Context) error {
 	jwtUser := c.Get("user").(*jwt.Token)
 	claims := jwtUser.Claims.(jwt.MapClaims)
@@ -96,22 +51,73 @@ func (h *APIHandler) UpdateStatus(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusRequestEntityTooLarge, Message: ErrTooLong}
 	}
 
-	u, err := h.db.FindUserByOID(id)
+	u, err := h.db.FindUserByOID(id, true)
 	if err != nil {
 		return handleMgoError(err)
 	}
 
 	newPost := models.NewPost(u.ID, bson.ObjectId(req.InReplyToStatusID), req.Status)
 
-	err = h.db.Insert("posts", newPost)
+	err = h.db.UpdatePost(*newPost)
 	if err != nil {
 		h.logger.Debug("API Error", zap.String("Error", err.Error()))
 		return handleMgoError(err)
 	}
 
-	go func(post models.Post, postChan chan models.Post) {
-		postChan <- post
+	go func(post models.Post, postChan chan models.PostResponse) {
+		resp := models.PostToPostResponse(post, *u)
+		postChan <- resp
 	}(*newPost, postChan)
 
 	return c.JSON(http.StatusOK, &messageResponse{Message: "ok"})
+}
+
+func (h *APIHandler) GetUserPosts(c echo.Context) error {
+	config := config.GetAPIConfig()
+	tokenStr := c.QueryParam("token")
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(config.Jwt), nil
+	})
+	if err != nil {
+		h.logger.Debug("API Error", zap.String("Error", err.Error()))
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+	if !token.Valid {
+		h.logger.Debug("API Error", zap.String("Error", err.Error()))
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+
+	screenName := c.QueryParam("screen_name")
+	userID := c.QueryParam("user_id")
+
+	if screenName != "" {
+		user, err := h.db.FindUser(screenName, true)
+		if err != nil {
+			return handleMgoError(err)
+		}
+		posts, err := h.db.GetPostsByOIDArray(user.Posts)
+		if err != nil {
+			return handleMgoError(err)
+		}
+
+		resp := models.PostsToPostResponseArray(posts, []models.User{*user}, true)
+
+		return c.JSON(http.StatusOK, &resp)
+	}
+
+	if userID != "" {
+		user, err := h.db.FindUserByOID(bson.ObjectIdHex(userID), true)
+		if err != nil {
+			return handleMgoError(err)
+		}
+		posts, err := h.db.GetPostsByOIDArray(user.Posts)
+		if err != nil {
+			return handleMgoError(err)
+		}
+
+		return c.JSON(http.StatusOK, &posts)
+
+	}
+
+	return c.JSON(http.StatusOK, &models.Post{})
 }

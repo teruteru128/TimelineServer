@@ -32,7 +32,7 @@ func (h *APIHandler) Follow(c echo.Context) error {
 	}
 
 	if req.DisplayName != "" {
-		f, err := h.db.FindUser(req.DisplayName)
+		f, err := h.db.FindUser(req.DisplayName, true)
 		if err != nil {
 			return handleMgoError(err)
 		}
@@ -47,7 +47,7 @@ func (h *APIHandler) Follow(c echo.Context) error {
 	}
 
 	if req.UserID != "" {
-		f, err := h.db.FindUserByOID(bson.ObjectId(req.UserID))
+		f, err := h.db.FindUserByOID(bson.ObjectId(req.UserID), true)
 		if err != nil {
 			return handleMgoError(err)
 		}
@@ -76,7 +76,7 @@ func (h *APIHandler) Unfollow(c echo.Context) error {
 	}
 
 	if req.DisplayName != "" {
-		f, err := h.db.FindUser(req.DisplayName)
+		f, err := h.db.FindUser(req.DisplayName, true)
 		if err != nil {
 			return handleMgoError(err)
 		}
@@ -91,7 +91,7 @@ func (h *APIHandler) Unfollow(c echo.Context) error {
 	}
 
 	if req.UserID != "" {
-		f, err := h.db.FindUserByOID(bson.ObjectId(req.UserID))
+		f, err := h.db.FindUserByOID(bson.ObjectId(req.UserID), true)
 		if err != nil {
 			return handleMgoError(err)
 		}
@@ -127,7 +127,7 @@ func (h *APIHandler) GetFriendsID(c echo.Context) error {
 	claims := token.Claims.(jwt.MapClaims)
 	id := claims["id"].(string)
 
-	user, err := h.db.FindUser(id)
+	user, err := h.db.FindUser(id, true)
 	if err != nil {
 		return handleMgoError(err)
 	}
@@ -158,14 +158,14 @@ func (h *APIHandler) GetFollowersID(c echo.Context) error {
 
 	user := &models.User{}
 	if id != "" {
-		user, err = h.db.FindUserByOID(bson.ObjectId(id))
+		user, err = h.db.FindUserByOID(bson.ObjectId(id), true)
 		if err != nil {
 			return handleMgoError(err)
 		}
 	}
 
 	if displayName != "" {
-		user, err = h.db.FindUser(displayName)
+		user, err = h.db.FindUser(displayName, true)
 		if err != nil {
 			return handleMgoError(err)
 		}
@@ -197,14 +197,14 @@ func (h *APIHandler) GetFollowerList(c echo.Context) error {
 
 	user := &models.User{}
 	if id != "" {
-		user, err = h.db.FindUserByOID(bson.ObjectId(id))
+		user, err = h.db.FindUserByOID(bson.ObjectId(id), true)
 		if err != nil {
 			return handleMgoError(err)
 		}
 	}
 
 	if displayName != "" {
-		user, err = h.db.FindUser(displayName)
+		user, err = h.db.FindUser(displayName, true)
 		if err != nil {
 			return handleMgoError(err)
 		}
@@ -214,7 +214,7 @@ func (h *APIHandler) GetFollowerList(c echo.Context) error {
 		return c.JSON(http.StatusOK, &[]models.UserResponse{})
 	}
 
-	users, err := h.db.FindUserByOIDArray(user.Followers)
+	users, err := h.db.FindUserByOIDArray(user.Followers, true)
 	if err != nil {
 		return handleMgoError(err)
 	}
@@ -243,14 +243,14 @@ func (h *APIHandler) GetFriendsList(c echo.Context) error {
 
 	user := &models.User{}
 	if id != "" {
-		user, err = h.db.FindUserByOID(bson.ObjectId(id))
+		user, err = h.db.FindUserByOID(bson.ObjectId(id), true)
 		if err != nil {
 			return handleMgoError(err)
 		}
 	}
 
 	if displayName != "" {
-		user, err = h.db.FindUser(displayName)
+		user, err = h.db.FindUser(displayName, true)
 		if err != nil {
 			return handleMgoError(err)
 		}
@@ -260,7 +260,7 @@ func (h *APIHandler) GetFriendsList(c echo.Context) error {
 		return c.JSON(http.StatusOK, &[]models.UserResponse{})
 	}
 
-	users, err := h.db.FindUserByOIDArray(user.Following)
+	users, err := h.db.FindUserByOIDArray(user.Following, true)
 	if err != nil {
 		return handleMgoError(err)
 	}

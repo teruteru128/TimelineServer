@@ -83,7 +83,7 @@ func (h *APIHandler) Login(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrParamsRequired}
 	}
 
-	u, err := h.db.FindUser(reqUser.ID)
+	u, err := h.db.FindUser(reqUser.ID, true)
 	if err != nil {
 		h.logger.Debug("API Error", zap.String("Error", err.Error()))
 		if err == mgo.ErrNotFound {
@@ -130,7 +130,7 @@ func (h *APIHandler) GetUser(c echo.Context) error {
 	userId := c.QueryParam("user_id")
 
 	if screenName != "" {
-		user, err := h.db.FindUser(screenName)
+		user, err := h.db.FindUser(screenName, true)
 		if err != nil {
 			return handleMgoError(err)
 		}
@@ -139,7 +139,7 @@ func (h *APIHandler) GetUser(c echo.Context) error {
 	}
 
 	if userId != "" {
-		user, err := h.db.FindUserByOID(bson.ObjectId(userId))
+		user, err := h.db.FindUserByOID(bson.ObjectId(userId), true)
 		if err != nil {
 			return handleMgoError(err)
 		}
@@ -180,7 +180,7 @@ func (h *APIHandler) GetAccountSettings(c echo.Context) error {
 	claims := token.Claims.(jwt.MapClaims)
 	id := claims["id"].(string)
 
-	user, err := h.db.FindUserByOID(bson.ObjectIdHex(id))
+	user, err := h.db.FindUserByOID(bson.ObjectIdHex(id), true)
 	if err != nil {
 		h.logger.Debug("API Error", zap.String("Error", err.Error()))
 		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
@@ -236,7 +236,7 @@ func (h *APIHandler) SetAccountSettings(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrParamsRequired}
 	}
 
-	newUser, err := h.db.FindUserByOID(id)
+	newUser, err := h.db.FindUserByOID(id, true)
 	if err != nil {
 		h.logger.Debug("API Error", zap.String("Error", err.Error()))
 		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
@@ -297,7 +297,7 @@ func (h *APIHandler) UpdateAccountProfileImage(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
 	}
 
-	u, err := h.db.FindUserByOID(id)
+	u, err := h.db.FindUserByOID(id, true)
 	if err != nil {
 		h.logger.Debug("API Error", zap.String("Error", err.Error()))
 		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}

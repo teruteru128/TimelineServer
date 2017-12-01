@@ -4,6 +4,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"time"
 )
 
 // UserResponse GET /users/:id のためのレスポンス
@@ -18,6 +19,7 @@ type UserResponse struct {
 	WebsiteURL  string          `json:"url"`               // ウェブサイトのURL(http://example.com)
 	AvatarURL   string          `json:"profile_image_url"` // プロフィール画像(http://static_cdn/profile_images/0.png)
 	Official    bool            `json:"official"`          // 公式
+	Description string          `json:"description"`
 	jwt.StandardClaims
 }
 
@@ -41,6 +43,52 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
+// PostResponse 投稿レスポンスの構造体
+type PostResponse struct {
+	FavoritedIds    []bson.ObjectId `json:"favorited_ids"`
+	CreatedAt       time.Time       `json:"created_at"`
+	ID          	bson.ObjectId   `json:"id"`   // BSON ObjectID
+	MentionsID      []bson.ObjectId `json:"mentions_id"`
+	URLs            []string        `json:"urls"`
+	Hashtags        []string        `json:"hashtags"`
+	InReplyToUserID bson.ObjectId   `json:"in_reply_to_user_id"`
+	Text            string          `json:"text"`
+	Shared          []bson.ObjectId `json:"shared"`
+	User			UserResponse			`json:"user"`
+}
+
+func PostToPostResponse(post Post, user User) PostResponse {
+	return PostResponse{
+		FavoritedIds: post.FavoritedIds,
+		CreatedAt: post.CreatedAt,
+		ID: post.ID,
+		MentionsID: post.MentionsID,
+		URLs: post.URLs,
+		Hashtags: post.Hashtags,
+		InReplyToUserID: post.InReplyToUserID,
+		Text: post.Text,
+		Shared: post.Shared,
+		User: UserToUserResponse(user),
+	}
+}
+
+func PostsToPostResponseArray(posts []Post, users []User, sameUser bool) []PostResponse {
+	var arr []PostResponse
+	for i, post := range posts {
+		if !sameUser {
+			resp := PostToPostResponse(post, users[i])
+			arr = append(arr, resp)
+		} else {
+			resp := PostToPostResponse(post, users[0])
+			arr = append(arr, resp)
+		}
+
+	}
+
+	return arr
+}
+
+
 // UserToUserResponse UserをAPI用ユーザ構造体に変換する
 func UserToUserResponse(user User) UserResponse {
 	return UserResponse{
@@ -54,6 +102,7 @@ func UserToUserResponse(user User) UserResponse {
 		WebsiteURL:  user.WebsiteURL,
 		AvatarURL:   user.AvatarURL,
 		Official:    user.Official,
+		Description: user.Description,
 	}
 }
 
@@ -77,18 +126,7 @@ func UserToLoginSucessResponse(user User, token string) LoginSuccessResponse {
 func UsersToUserResponseArray(users []User) []UserResponse {
 	var arr []UserResponse
 	for _, user := range users {
-		resp := UserResponse{
-			ID:          user.ID.Hex(),
-			UserID:      user.UserID,
-			DisplayName: user.DisplayName,
-			PostsCount:  uint(len(user.Posts)),
-			Location:    user.Location,
-			Following:   user.Following,
-			Followers:   user.Followers,
-			WebsiteURL:  user.WebsiteURL,
-			AvatarURL:   user.AvatarURL,
-			Official:    user.Official,
-		}
+		resp := UserToUserResponse(user)
 		arr = append(arr, resp)
 	}
 

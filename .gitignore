@@ -25,3 +25,5 @@ uploads/img/*
 
 data/redis/*
 data/mongo/*
+
+.idea

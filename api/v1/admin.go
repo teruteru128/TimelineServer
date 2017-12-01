@@ -30,7 +30,7 @@ func (h *APIHandler) AUserSuspendHandler(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrParamsRequired}
 	}
 
-	u, err := h.db.FindUserByOID(req.UserID)
+	u, err := h.db.FindUserByOID(req.UserID, true)
 	if err != nil {
 		h.logger.Debug("API Error", zap.String("Error", ErrParamsRequired))
 		return handleMgoError(err)

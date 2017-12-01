@@ -18,17 +18,19 @@ const (
 )
 
 // FindUserByOID ObjectIDでユーザを検索する
-func (m *MongoInstance) FindUserByOID(objectID bson.ObjectId) (*models.User, error) {
+func (m *MongoInstance) FindUserByOID(objectID bson.ObjectId, cached bool) (*models.User, error) {
 	sess := m.session.Clone()
 	defer sess.Close()
 
-	data, err := m.cache.GetStruct(objectID.Hex())
-	if err != nil && err != redis.ErrNil {
-		return nil, err
-	}
-	if data != nil {
-		u := m.deserializeUser(data)
-		return u, nil
+	if cached {
+		data, err := m.cache.GetStruct(objectID.Hex())
+		if err != nil && err != redis.ErrNil {
+			return nil, err
+		}
+		if data != nil {
+			u := m.deserializeUser(data)
+			return u, nil
+		}
 	}
 
 	u := new(models.User)
@@ -37,7 +39,7 @@ func (m *MongoInstance) FindUserByOID(objectID bson.ObjectId) (*models.User, err
 		return nil, err
 	}
 
-	err = m.updateUserCache(*u)
+	err := m.updateUserCache(*u)
 	if err != nil {
 		m.logger.Debug("Redis Error", zap.String("Error", err.Error()))
 		return nil, err
@@ -47,7 +49,7 @@ func (m *MongoInstance) FindUserByOID(objectID bson.ObjectId) (*models.User, err
 }
 
 // FindUserByOIDArray ObjectIDの配列でユーザーを一括検索し一致したユーザの配列を返す
-func (m *MongoInstance) FindUserByOIDArray(objectIds []bson.ObjectId) ([]models.User, error) {
+func (m *MongoInstance) FindUserByOIDArray(objectIds []bson.ObjectId, cached bool) ([]models.User, error) {
 	sess := m.session.Clone()
 	defer sess.Close()
 
@@ -57,13 +59,15 @@ func (m *MongoInstance) FindUserByOIDArray(objectIds []bson.ObjectId) ([]models.
 	array := []models.User{}
 
 	for _, objectID := range objectIds {
-		data, err := m.cache.GetStruct(objectID.Hex())
-		if err != nil && err != redis.ErrNil {
-			return nil, err
-		}
-		if data != nil {
-			u := m.deserializeUser(data)
-			array = append(array, *u)
+		if cached {
+			data, err := m.cache.GetStruct(objectID.Hex())
+			if err != nil && err != redis.ErrNil {
+				return nil, err
+			}
+			if data != nil {
+				u := m.deserializeUser(data)
+				array = append(array, *u)
+			}
 		} else {
 			u := models.User{}
 			err := sess.DB(m.db()).C(UsersCol).
@@ -78,17 +82,19 @@ func (m *MongoInstance) FindUserByOIDArray(objectIds []bson.ObjectId) ([]models.
 }
 
 // FindUser userid(displayName)でユーザーを検索する
-func (m *MongoInstance) FindUser(userid string) (*models.User, error) {
+func (m *MongoInstance) FindUser(userid string, cached bool) (*models.User, error) {
 	sess := m.session.Clone()
 	defer sess.Close()
 
-	data, err := m.cache.GetStruct(userid)
-	if err != nil && err != redis.ErrNil {
-		return nil, err
-	}
-	if data != nil {
-		u := m.deserializeUser(data)
-		return u, nil
+	if cached {
+		data, err := m.cache.GetStruct(userid)
+		if err != nil && err != redis.ErrNil {
+			return nil, err
+		}
+		if data != nil {
+			u := m.deserializeUser(data)
+			return u, nil
+		}
 	}
 
 	u := new(models.User)
@@ -97,7 +103,7 @@ func (m *MongoInstance) FindUser(userid string) (*models.User, error) {
 		return nil, err
 	}
 
-	err = m.updateUserCache(*u)
+	err := m.updateUserCache(*u)
 	if err != nil {
 		m.logger.Debug("Redis Error", zap.String("Error", err.Error()))
 		return nil, err
@@ -128,11 +134,11 @@ func (m *MongoInstance) FollowUser(fromOID, toOID bson.ObjectId) error {
 	sess := m.session.Clone()
 	defer sess.Close()
 
-	user, err := m.FindUserByOID(fromOID)
+	user, err := m.FindUserByOID(fromOID, true)
 	if err != nil {
 		return handleError(err)
 	}
-	_, err = m.FindUserByOIDArray(user.Following)
+	_, err = m.FindUserByOIDArray(user.Following, true)
 	if err != nil {
 		if err == mgo.ErrNotFound {
 			return errors.New("already followed")
@@ -191,6 +197,25 @@ func (m *MongoInstance) deserializeUserArray(serialized []byte) *[]models.User {
 	deserialized := new([]models.User)
 	json.Unmarshal(serialized, &deserialized)
 	return deserialized
+}
+
+func (m *MongoInstance) AppendUserPost(userID bson.ObjectId, postID bson.ObjectId) error {
+	sess := m.session.Clone()
+	defer sess.Close()
+
+	err := sess.DB(m.db()).C(UsersCol).
+		Update(bson.M{"_id": userID}, bson.M{"$push": bson.M{"posts": postID}})
+	if err != nil {
+		return err
+	}
+
+	// キャッシュ更新
+	updated, err := m.FindUserByOID(userID, false)
+	if err != nil {
+		return err
+	}
+	m.updateUserCache(*updated)
+	return nil
 }
 
 func (m *MongoInstance) UpdateUser(objectID bson.ObjectId, key string, value interface{}) error {

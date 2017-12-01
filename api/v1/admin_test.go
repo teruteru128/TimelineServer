@@ -89,7 +89,7 @@ func TestUserSuspendHandler(t *testing.T) {
 		SigningKey: []byte(config.MockJwtToken),
 	})(th.AUserSuspendHandler)(c)
 
-	u, err = th.db.FindUserByOID(u.ID)
+	u, err = th.db.FindUserByOID(u.ID, true)
 	if err != nil {
 		t.Error(err)
 	}
@@ -136,7 +136,7 @@ func TestSetOfficialFlagHandler(t *testing.T) {
 		SigningKey: []byte(config.MockJwtToken),
 	})(th.ASetOfficialFlag)(c)
 
-	u, err = th.db.FindUserByOID(u.ID)
+	u, err = th.db.FindUserByOID(u.ID, true)
 	if err != nil {
 		t.Error(err)
 	}

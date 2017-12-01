@@ -16,7 +16,7 @@ type RedisInstance struct {
 
 func newPool(conf config.CacheConfig) *redis.Pool {
 	port := strconv.Itoa(conf.Port)
-	host := ":" + port
+	host := conf.Server + ":" + port
 	return &redis.Pool{
 		MaxIdle:     3,
 		IdleTimeout: 240 * time.Second,

@@ -20,30 +20,30 @@ func NewV1Router() *echo.Echo {
 	account := v1.Group("/account")
 	account.POST("/create.json", h.AccountCreate)
 	account.POST("/login.json", h.Login)
-
 	account.GET("/settings.json", h.GetAccountSettings)
-	accountj := v1.Group("/account")
-	accountj.Use(middleware.JWT([]byte(apiConfig.Jwt)))
-	accountj.POST("/settings.json", h.SetAccountSettings)
-	accountj.POST("/update_profile_image.json", h.UpdateAccountProfileImage)
+
+	account = v1.Group("/account")
+	account.Use(middleware.JWT([]byte(apiConfig.Jwt)))
+	account.POST("/settings.json", h.SetAccountSettings)
+	account.POST("/update_profile_image.json", h.UpdateAccountProfileImage)
 
 	users := v1.Group("/users")
 	users.GET("/show.json", h.GetUser)
 
 	// Administrator
-	superj := v1.Group("/super")
-	superj.Use(middleware.JWT([]byte(apiConfig.Jwt)))
-	superj.POST("/update_suspend.json", h.AUserSuspendHandler)
-	superj.POST("/update_official.json", h.ASetOfficialFlag)
+	super := v1.Group("/super")
+	super.Use(middleware.JWT([]byte(apiConfig.Jwt)))
+	super.POST("/update_suspend.json", h.AUserSuspendHandler)
+	super.POST("/update_official.json", h.ASetOfficialFlag)
 
 	// Static
 	v1.Static("/static", "static")
 
 	// Friendship
-	friendshipj := v1.Group("friendships")
-	friendshipj.Use(middleware.JWT([]byte(apiConfig.Jwt)))
-	friendshipj.POST("/create.json", h.Follow)
-	friendshipj.POST("/destroy.json", h.Unfollow)
+	friendship := v1.Group("friendships")
+	friendship.Use(middleware.JWT([]byte(apiConfig.Jwt)))
+	friendship.POST("/create.json", h.Follow)
+	friendship.POST("/destroy.json", h.Unfollow)
 
 	friends := v1.Group("/friends")
 	friends.GET("/ids.json", h.GetFriendsID)
@@ -53,12 +53,14 @@ func NewV1Router() *echo.Echo {
 	followers.GET("/ids.json", h.GetFollowersID)
 	followers.GET("/list.json", h.GetFollowerList)
 
-	statusesj := v1.Group("/statuses")
-	statusesj.Use(middleware.JWT([]byte(apiConfig.Jwt)))
-	statusesj.POST("/update.json", h.UpdateStatus)
+	statuses := v1.Group("/statuses")
+	statuses.GET("/list.json", h.GetUserPosts)
 
-	searchj := v1.Group("/search")
-	searchj.GET("/user.json", h.SearchUserHandler)
+	statuses.Use(middleware.JWT([]byte(apiConfig.Jwt)))
+	statuses.POST("/update.json", h.UpdateStatus)
+
+	search := v1.Group("/search")
+	search.GET("/user.json", h.SearchUserHandler)
 
 	// Socket.io
 	c := cors.New(cors.Options{

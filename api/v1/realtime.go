@@ -11,9 +11,10 @@ import (
 	"github.com/googollee/go-socket.io"
 	"github.com/labstack/gommon/log"
 	"go.uber.org/zap"
+	"fmt"
 )
 
-var postChan = make(chan models.Post, 100)
+var postChan = make(chan models.PostResponse)
 
 const loggerTopic = "Socket.io"
 
@@ -40,8 +41,7 @@ func (h *APIHandler) SocketIO() http.Handler {
 				return []byte(apiConfig.Jwt), nil
 			})
 			if err != nil {
-				h.logger.Debug(loggerTopic, zap.String("Error", err.Error()))
-				so.Emit("unauthorized", ErrInvalidJwt)
+				h.logger.Debug(loggerTopic, zap.String("Error", ErrInvalidJwt))
 				so.Disconnect()
 				return
 			}
@@ -50,82 +50,62 @@ func (h *APIHandler) SocketIO() http.Handler {
 
 			claimID := claims["id"].(string)
 
-			so.Emit("authenticated")
-
-			// so.Join(claimID)
-
-			// 初回送信
-			posts, err := h.db.GetAllPosts()
+			err = so.Emit("authenticated")
 			if err != nil {
-				h.logger.Debug(loggerTopic, zap.String("Error", err.Error()))
-			}
-			for _, post := range *posts {
-
-				me, err := h.db.FindUser(claimID)
-				if err != nil {
-					handleMgoError(err)
-				}
-				resp, err := h.newPostResponse(post, "")
-				if err != nil {
-					handleMgoError(err)
-				}
-				j, err := json.Marshal(resp)
-				if err != nil {
-					h.logger.Debug(loggerTopic, zap.Any("Error", err.Error()))
-					return
-				}
-
-				if post.UserID.Hex() == claimID {
-					so.Emit(claimID, string(j))
-					h.logger.Debug(loggerTopic, zap.Any("Sent", claimID))
-				}
-
-				for _, follow := range me.Following {
-					if follow == post.UserID {
-						so.Emit(claimID, string(j))
-						h.logger.Debug(loggerTopic, zap.Any("Sent", claimID))
-					}
-				}
+				h.logger.Error(loggerTopic, zap.Error(err))
 			}
 
-			go func(postChan chan models.Post) {
+			err = so.Join(claimID)
+			if err != nil {
+				h.logger.Error(loggerTopic, zap.Error(err))
+			}
+
+			go func(postChan chan models.PostResponse) {
 				// 投稿監視
 				for post := range postChan {
-					sender, err := h.db.FindUser(post.UserID.Hex())
+					j, err := json.Marshal(post)
 					if err != nil {
-						handleMgoError(err)
-					}
-
-					resp, err := h.newPostResponse(post, "")
-					if err != nil {
-						handleMgoError(err)
-					}
-
-					j, err := json.Marshal(resp)
-					if err != nil {
-						h.logger.Debug(loggerTopic, zap.Any("Error", err.Error()))
+						h.logger.Error(loggerTopic, zap.Error(err))
 						continue
 					}
+
+					fmt.Println(string(j))
 
 					// UNION timeline
-					so.Emit("union", string(j))
-					h.logger.Debug(loggerTopic, zap.Any("Sent", "UNION"))
+					err = so.Emit("union", string(j))
+					if err != nil {
+						h.logger.Error(loggerTopic, zap.Error(err))
+					} else {
+						h.logger.Debug(loggerTopic, zap.Any("Sent", "UNION"), zap.String("Data", string(j)))
+					}
 
-					so.Emit(claimID, string(j))
-					h.logger.Debug(loggerTopic, zap.Any("Sent", claimID))
+					err = so.Emit(claimID, string(j))
+					if err != nil {
+						h.logger.Error(loggerTopic, zap.Error(err))
+					} else {
+						h.logger.Debug(loggerTopic, zap.Any("Sent", claimID), zap.String("Data", string(j)))
+					}
 
-					if len(sender.Followers) == 0 {
+					if len(post.User.Followers) == 0 {
 						continue
 					}
 
-					if post.UserID.Hex() == claimID {
-						so.Emit(claimID, string(j))
-						h.logger.Debug(loggerTopic, zap.Any("Sent", claimID))
+					if post.User.UserID == claimID {
+						err = so.Emit(claimID, string(j))
+						if err != nil {
+							h.logger.Error(loggerTopic, zap.Error(err))
+						} else {
+							h.logger.Debug(loggerTopic, zap.Any("Sent", claimID), zap.String("Data", string(j)))
+						}
 					}
 
-					for _, follower := range sender.Followers {
-						so.Emit(follower.Hex(), string(j))
-						h.logger.Debug(loggerTopic, zap.Any("Sent", follower.Hex()))
+					for _, follower := range post.User.Followers {
+						err = so.Emit(follower.Hex(), string(j))
+						if err != nil {
+							h.logger.Error(loggerTopic, zap.Error(err))
+						} else {
+							h.logger.Debug(loggerTopic, zap.Any("Sent", claimID), zap.String("Data", string(j)))
+						}
 					}
 				}
 			}(postChan)

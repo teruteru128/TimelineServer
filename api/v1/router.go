@@ -40,7 +40,7 @@ func NewV1Router() *echo.Echo {
 	v1.Static("/static", "static")
 
 	// Friendship
-	friendship := v1.Group("friendships")
+	friendship := v1.Group("/friendships")
 	friendship.Use(middleware.JWT([]byte(apiConfig.Jwt)))
 	friendship.POST("/create.json", h.Follow)
 	friendship.POST("/destroy.json", h.Unfollow)
@@ -70,5 +70,6 @@ func NewV1Router() *echo.Echo {
 	sio := c.Handler(h.SocketIO())
 	e.GET("/socket.io", echo.WrapHandler(sio))
 	e.POST("/socket.io", echo.WrapHandler(sio))
+
 	return e
 }

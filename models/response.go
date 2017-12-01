@@ -3,8 +3,9 @@ package models
 import (
 	"gopkg.in/mgo.v2/bson"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"time"
+
+	jwt "github.com/dgrijalva/jwt-go"
 )
 
 // UserResponse GET /users/:id のためのレスポンス
@@ -47,28 +48,28 @@ type ErrorResponse struct {
 type PostResponse struct {
 	FavoritedIds    []bson.ObjectId `json:"favorited_ids"`
 	CreatedAt       time.Time       `json:"created_at"`
-	ID          	bson.ObjectId   `json:"id"`   // BSON ObjectID
+	ID              bson.ObjectId   `json:"id"` // BSON ObjectID
 	MentionsID      []bson.ObjectId `json:"mentions_id"`
 	URLs            []string        `json:"urls"`
 	Hashtags        []string        `json:"hashtags"`
 	InReplyToUserID bson.ObjectId   `json:"in_reply_to_user_id"`
 	Text            string          `json:"text"`
 	Shared          []bson.ObjectId `json:"shared"`
-	User			UserResponse			`json:"user"`
+	User            UserResponse    `json:"user"`
 }
 
 func PostToPostResponse(post Post, user User) PostResponse {
 	return PostResponse{
-		FavoritedIds: post.FavoritedIds,
-		CreatedAt: post.CreatedAt,
-		ID: post.ID,
-		MentionsID: post.MentionsID,
-		URLs: post.URLs,
-		Hashtags: post.Hashtags,
+		FavoritedIds:    post.FavoritedIds,
+		CreatedAt:       post.CreatedAt,
+		ID:              post.ID,
+		MentionsID:      post.MentionsID,
+		URLs:            post.URLs,
+		Hashtags:        post.Hashtags,
 		InReplyToUserID: post.InReplyToUserID,
-		Text: post.Text,
-		Shared: post.Shared,
-		User: UserToUserResponse(user),
+		Text:            post.Text,
+		Shared:          post.Shared,
+		User:            UserToUserResponse(user),
 	}
 }
 
@@ -87,7 +88,6 @@ func PostsToPostResponseArray(posts []Post, users []User, sameUser bool) []PostR
 
 	return arr
 }
-
 
 // UserToUserResponse UserをAPI用ユーザ構造体に変換する
 func UserToUserResponse(user User) UserResponse {

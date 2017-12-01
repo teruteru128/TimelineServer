@@ -2,21 +2,21 @@ package v1
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
-	"github.com/TinyKitten/TimelineServer/models"
-
 	"github.com/TinyKitten/TimelineServer/config"
+	"github.com/TinyKitten/TimelineServer/models"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/googollee/go-socket.io"
-	"github.com/labstack/gommon/log"
 	"go.uber.org/zap"
-	"fmt"
 )
 
-var postChan = make(chan models.PostResponse)
+const (
+	loggerTopic = "Socket.io"
+)
 
-const loggerTopic = "Socket.io"
+var postChan chan models.PostResponse
 
 func (h *APIHandler) SocketIO() http.Handler {
 	server, err := socketio.NewServer(nil)
@@ -31,9 +31,11 @@ func (h *APIHandler) SocketIO() http.Handler {
 
 		// JWT Authentication
 		so.On("authenticate", func(tokenReq string) {
+			postChan = make(chan models.PostResponse)
 
 			so.On("disconnection", func() {
 				h.logger.Debug(loggerTopic, zap.String("connection", "On disconnect"))
+				return
 			})
 
 			apiConfig := config.GetAPIConfig()
@@ -55,12 +57,8 @@ func (h *APIHandler) SocketIO() http.Handler {
 				h.logger.Error(loggerTopic, zap.Error(err))
 			}
 
-			err = so.Join(claimID)
-			if err != nil {
-				h.logger.Error(loggerTopic, zap.Error(err))
-			}
-
 			go func(postChan chan models.PostResponse) {
+				// UNION Timeline
 				// 投稿監視
 				for post := range postChan {
 					j, err := json.Marshal(post)
@@ -68,8 +66,6 @@ func (h *APIHandler) SocketIO() http.Handler {
 						h.logger.Error(loggerTopic, zap.Error(err))
 						continue
 					}
-
-					fmt.Println(string(j))
 
 					// UNION timeline
 					err = so.Emit("union", string(j))
@@ -79,32 +75,28 @@ func (h *APIHandler) SocketIO() http.Handler {
 						h.logger.Debug(loggerTopic, zap.Any("Sent", "UNION"), zap.String("Data", string(j)))
 					}
 
-					err = so.Emit(claimID, string(j))
-					if err != nil {
-						h.logger.Error(loggerTopic, zap.Error(err))
-					} else {
-						h.logger.Debug(loggerTopic, zap.Any("Sent", claimID), zap.String("Data", string(j)))
-					}
-
-					if len(post.User.Followers) == 0 {
-						continue
-					}
-
-					if post.User.UserID == claimID {
-						err = so.Emit(claimID, string(j))
+					// 自分の投稿
+					if post.User.ID == claimID {
+						err = so.Emit("home", string(j))
 						if err != nil {
 							h.logger.Error(loggerTopic, zap.Error(err))
 						} else {
 							h.logger.Debug(loggerTopic, zap.Any("Sent", claimID), zap.String("Data", string(j)))
 						}
-					}
-
-					for _, follower := range post.User.Followers {
-						err = so.Emit(follower.Hex(), string(j))
-						if err != nil {
-							h.logger.Error(loggerTopic, zap.Error(err))
-						} else {
-							h.logger.Debug(loggerTopic, zap.Any("Sent", claimID), zap.String("Data", string(j)))
+						continue
+					} else {
+						// 自分がフォローしている人の投稿
+						if len(post.User.Followers) != 0 {
+							for _, follower := range post.User.Followers {
+								if claimID == follower.Hex() {
+									err = so.Emit("home", string(j))
+									if err != nil {
+										h.logger.Error(loggerTopic, zap.Error(err))
+									} else {
+										h.logger.Debug(loggerTopic, zap.Any("Sent broadcast", claimID), zap.String("Data", string(j)))
+									}
+								}
+							}
 						}
 					}
 				}

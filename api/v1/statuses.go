@@ -89,6 +89,7 @@ func (h *APIHandler) GetUserPosts(c echo.Context) error {
 	}
 
 	limitStr := c.QueryParam("limit")
+	cursorStr := c.QueryParam("cursor")
 	screenName := c.QueryParam("screen_name")
 	userID := c.QueryParam("user_id")
 
@@ -102,16 +103,51 @@ func (h *APIHandler) GetUserPosts(c echo.Context) error {
 			return handleMgoError(err)
 		}
 
-		if limitStr == "" {
+		if limitStr == "" && cursorStr == "" {
 			resp := models.PostsToPostResponseArray(posts, []models.User{*user}, true)
 			return c.JSON(http.StatusOK, &resp)
 		}
+
+		if limitStr == "" && cursorStr != "" {
+			cursor, err := strconv.Atoi(cursorStr)
+			if err != nil {
+				h.logger.Debug("Param Error", zap.String("Error", err.Error()))
+				return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrBadFormat}
+			}
+
+			if cursor >= len(posts) {
+				return c.JSON(http.StatusOK, &[]models.PostResponse{})
+			}
+
+			resp := models.PostsToPostResponseArray(posts[cursor:], []models.User{*user}, true)
+			return c.JSON(http.StatusOK, &resp)
+
+		}
+
+		if limitStr != "" && cursorStr == "" {
+			limit, err := strconv.Atoi(limitStr)
+			if err != nil {
+				h.logger.Debug("Param Error", zap.String("Error", err.Error()))
+				return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrBadFormat}
+			}
+			resp := models.PostsToPostResponseArray(posts[:limit], []models.User{*user}, true)
+			return c.JSON(http.StatusOK, &resp)
+		}
+
 		limit, err := strconv.Atoi(limitStr)
 		if err != nil {
 			h.logger.Debug("Param Error", zap.String("Error", err.Error()))
 			return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrBadFormat}
 		}
-		resp := models.PostsToPostResponseArray(posts[:limit], []models.User{*user}, true)
+		cursor, err := strconv.Atoi(cursorStr)
+		if err != nil {
+			h.logger.Debug("Param Error", zap.String("Error", err.Error()))
+			return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrBadFormat}
+		}
+		if cursor >= len(posts) {
+			return c.JSON(http.StatusOK, &[]models.PostResponse{})
+		}
+		resp := models.PostsToPostResponseArray(posts[cursor:limit], []models.User{*user}, true)
 		return c.JSON(http.StatusOK, &resp)
 	}
 
@@ -129,5 +165,5 @@ func (h *APIHandler) GetUserPosts(c echo.Context) error {
 
 	}
 
-	return c.JSON(http.StatusOK, &models.Post{})
+	return c.JSON(http.StatusOK, &[]models.Post{})
 }

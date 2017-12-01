@@ -2,15 +2,16 @@ package v1
 
 import (
 	"net/http"
+	"strconv"
 	"unicode/utf8"
 
 	"go.uber.org/zap"
 	"gopkg.in/mgo.v2/bson"
 
+	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/TinyKitten/TimelineServer/models"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	"github.com/TinyKitten/TimelineServer/config"
 )
 
 type (
@@ -87,6 +88,7 @@ func (h *APIHandler) GetUserPosts(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
 	}
 
+	limitStr := c.QueryParam("limit")
 	screenName := c.QueryParam("screen_name")
 	userID := c.QueryParam("user_id")
 
@@ -100,8 +102,16 @@ func (h *APIHandler) GetUserPosts(c echo.Context) error {
 			return handleMgoError(err)
 		}
 
-		resp := models.PostsToPostResponseArray(posts, []models.User{*user}, true)
-
+		if limitStr == "" {
+			resp := models.PostsToPostResponseArray(posts, []models.User{*user}, true)
+			return c.JSON(http.StatusOK, &resp)
+		}
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil {
+			h.logger.Debug("Param Error", zap.String("Error", err.Error()))
+			return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrBadFormat}
+		}
+		resp := models.PostsToPostResponseArray(posts[:limit], []models.User{*user}, true)
 		return c.JSON(http.StatusOK, &resp)
 	}
 

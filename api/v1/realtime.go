@@ -35,6 +35,7 @@ func (h *APIHandler) SocketIO() http.Handler {
 
 			so.On("disconnection", func() {
 				h.logger.Debug(loggerTopic, zap.String("connection", "On disconnect"))
+				close(postChan)
 				return
 			})
 

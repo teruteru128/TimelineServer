@@ -17,8 +17,11 @@ const (
 )
 
 var postChan chan models.PostResponse
+var chanClosed chan struct{}
 
 func (h *APIHandler) SocketIO() http.Handler {
+	chanClosed = make(chan struct{})
+
 	server, err := socketio.NewServer(nil)
 	if err != nil {
 		log.Fatal(err)
@@ -35,8 +38,7 @@ func (h *APIHandler) SocketIO() http.Handler {
 
 			so.On("disconnection", func() {
 				h.logger.Debug(loggerTopic, zap.String("connection", "On disconnect"))
-				close(postChan)
-				return
+				close(chanClosed)
 			})
 
 			apiConfig := config.GetAPIConfig()
@@ -46,7 +48,7 @@ func (h *APIHandler) SocketIO() http.Handler {
 			if err != nil {
 				h.logger.Debug(loggerTopic, zap.String("Error", ErrInvalidJwt))
 				so.Disconnect()
-				return
+				close(chanClosed)
 			}
 
 			claims := token.Claims.(jwt.MapClaims)
@@ -57,11 +59,11 @@ func (h *APIHandler) SocketIO() http.Handler {
 			if err != nil {
 				h.logger.Error(loggerTopic, zap.Error(err))
 			}
-
-			go func(postChan chan models.PostResponse) {
-				// UNION Timeline
-				// 投稿監視
-				for post := range postChan {
+			// UNION Timeline
+			// 投稿監視
+			for {
+				select {
+				case post := <-postChan:
 					j, err := json.Marshal(post)
 					if err != nil {
 						h.logger.Error(loggerTopic, zap.Error(err))
@@ -100,8 +102,10 @@ func (h *APIHandler) SocketIO() http.Handler {
 							}
 						}
 					}
+				case <-chanClosed:
+					return
 				}
-			}(postChan)
+			}
 		})
 	})
 	return server

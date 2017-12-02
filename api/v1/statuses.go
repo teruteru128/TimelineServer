@@ -65,7 +65,7 @@ func (h *APIHandler) UpdateStatus(c echo.Context) error {
 		return handleMgoError(err)
 	}
 
-	go func(post models.Post, postChan chan models.PostResponse) {
+	go func(post models.Post, postChan chan<- models.PostResponse) {
 		resp := models.PostToPostResponse(post, *u)
 		postChan <- resp
 	}(*newPost, postChan)

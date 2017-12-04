@@ -4,7 +4,6 @@ import (
 	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"github.com/rs/cors"
 	validator "gopkg.in/go-playground/validator.v9"
 )
 
@@ -59,6 +58,7 @@ func NewV1Router() *echo.Echo {
 	followers.GET("/list.json", h.GetFollowerList)
 
 	statuses := v1.Group("/statuses")
+	statuses.GET("/realtime.json", h.RealtimeHandler)
 	statuses.GET("/list.json", h.GetUserPosts)
 
 	statuses.Use(middleware.JWT([]byte(apiConfig.Jwt)))
@@ -66,15 +66,6 @@ func NewV1Router() *echo.Echo {
 
 	search := v1.Group("/search")
 	search.GET("/user.json", h.SearchUserHandler)
-
-	// Socket.io
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowCredentials: true,
-	})
-	sio := c.Handler(h.SocketIO())
-	e.GET("/socket.io", echo.WrapHandler(sio))
-	e.POST("/socket.io", echo.WrapHandler(sio))
 
 	return e
 }

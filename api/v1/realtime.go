@@ -8,12 +8,21 @@ import (
 	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/TinyKitten/TimelineServer/models"
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
-	"golang.org/x/net/websocket"
 )
 
-var postChan chan models.PostResponse
+var (
+	postChan chan models.PostResponse
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+)
 
 const (
 	loggerTopic = "Realtime Stream"
@@ -38,45 +47,47 @@ func (h *APIHandler) RealtimeHandler(c echo.Context) error {
 
 	postChan = make(chan models.PostResponse)
 
-	websocket.Handler(func(ws *websocket.Conn) {
-		defer ws.Close()
-		go func(postChan chan models.PostResponse) {
-			for post := range postChan {
-				bytes, err := json.Marshal(post)
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
+	}
+	defer ws.Close()
+	defer close(postChan)
+
+	go func(postChan chan models.PostResponse) {
+		for post := range postChan {
+			bytes, err := json.Marshal(post)
+			if err != nil {
+				c.Logger().Error(err)
+			}
+			if post.User.ID == claimID {
+				err := ws.WriteMessage(websocket.TextMessage, bytes)
 				if err != nil {
 					c.Logger().Error(err)
 				}
-				if post.User.ID == claimID {
-					err = websocket.Message.Send(ws, string(bytes))
-					if err != nil {
-						c.Logger().Error(err)
-					}
-				} else {
-					// 自分がフォローしている人の投稿
-					if len(post.User.Followers) != 0 {
-						for _, follower := range post.User.Followers {
-							if claimID == follower.Hex() {
-								err = websocket.Message.Send(ws, string(bytes))
-								if err != nil {
-									c.Logger().Error(err)
-								}
+			} else {
+				// 自分がフォローしている人の投稿
+				if len(post.User.Followers) != 0 {
+					for _, follower := range post.User.Followers {
+						if claimID == follower.Hex() {
+							err := ws.WriteMessage(websocket.TextMessage, bytes)
+							if err != nil {
+								c.Logger().Error(err)
 							}
 						}
 					}
 				}
-
 			}
-		}(postChan)
-
-		for {
-			// Read
-			msg := ""
-			err = websocket.Message.Receive(ws, &msg)
-			if err != nil {
-				c.Logger().Error(err)
-			}
-			fmt.Printf("%s\n", msg)
 		}
-	}).ServeHTTP(c.Response(), c.Request())
+	}(postChan)
+
+	for {
+		_, msg, err := ws.ReadMessage()
+		if err != nil {
+			c.Logger().Error(err)
+		}
+		fmt.Printf("%s\n", msg)
+	}
+
 	return nil
 }

@@ -20,18 +20,6 @@ type (
 		Status            string `json:"status" validate:"required"`
 		InReplyToStatusID string `json:"in_reply_to_status_id"`
 	}
-	PostResponse struct {
-		Favorited           bool                `json:"favorited"`
-		CreatedAt           string              `json:"created_at"`
-		ID                  string              `json:"id"`
-		Entities            models.PostEntity   `json:"entities"`
-		InReplyToUserID     string              `json:"in_reply_to_user_id"`
-		Text                string              `json:"text"`
-		Shared              bool                `json:"shared"`
-		SharedCount         int                 `json:"shared_count"`
-		User                models.UserResponse `json:"user"`
-		InReplyToScreenName string              `json:"in_reply_to_screen_name"`
-	}
 )
 
 func (h *APIHandler) UpdateStatus(c echo.Context) error {

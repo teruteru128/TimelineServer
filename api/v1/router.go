@@ -46,8 +46,8 @@ func NewV1Router() *echo.Echo {
 
 	like := v1.Group("/like")
 	like.Use(middleware.JWT([]byte(apiConfig.Jwt)))
-	like.POST("/create.json", h.Follow)
-	like.POST("/destroy.json", h.Unfollow)
+	like.POST("/create.json", h.CreateLike)
+	like.POST("/destroy.json", h.DestroyLike)
 
 	friends := v1.Group("/friends")
 	friends.GET("/ids.json", h.GetFriendsID)

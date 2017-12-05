@@ -59,7 +59,9 @@ func NewV1Router() *echo.Echo {
 
 	statuses := v1.Group("/statuses")
 	statuses.GET("/realtime.json", h.RealtimeHandler)
+	statuses.GET("/union.json", h.UnionHandler)
 	statuses.GET("/list.json", h.GetUserPosts)
+	statuses.GET("/home.json", h.GetHomePosts)
 
 	statuses.Use(middleware.JWT([]byte(apiConfig.Jwt)))
 	statuses.POST("/update.json", h.UpdateStatus)

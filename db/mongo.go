@@ -34,7 +34,7 @@ func (m *MongoInstance) db() string {
 	return m.conf.Database
 }
 
-func setIndex(s *mgo.Database) error {
+func setIndex(s *mgo.Database) (err error) {
 	// users
 	usersIndex := mgo.Index{
 		Key:        []string{"userId", "email"},
@@ -43,9 +43,9 @@ func setIndex(s *mgo.Database) error {
 		Background: true, // バックグラウンドでインデックスを行う
 		Sparse:     true, // nilのデータはインデックスしない
 	}
-	err := s.C("users").EnsureIndex(usersIndex)
+	err = s.C("users").EnsureIndex(usersIndex)
 
-	return err
+	return
 }
 
 func NewMongoInstance(conf config.DBConfig, cacheConf config.CacheConfig) (*MongoInstance, error) {

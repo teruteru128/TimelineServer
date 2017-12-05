@@ -8,7 +8,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/TinyKitten/TimelineServer/models"
-	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -140,23 +139,40 @@ func (m *MongoInstance) FollowUser(fromOID, toOID bson.ObjectId) error {
 	}
 	_, err = m.FindUserByOIDArray(user.Following, true)
 	if err != nil {
-		if err == mgo.ErrNotFound {
-			return errors.New("already followed")
-		} else {
-			return handleError(err)
-		}
+		return handleError(err)
 	}
 
 	err = sess.DB(m.db()).C(UsersCol).
-		Update(bson.M{"_id": fromOID}, bson.M{"$push": bson.M{"following": toOID}})
+		Update(bson.M{"_id": fromOID}, bson.M{"$addToSet": bson.M{"following": toOID}})
 	if err != nil {
 		return handleError(err)
 	}
 	err = sess.DB(m.db()).C(UsersCol).
-		Update(bson.M{"_id": toOID}, bson.M{"$push": bson.M{"followers": fromOID}})
+		Update(bson.M{"_id": toOID}, bson.M{"$addToSet": bson.M{"followers": fromOID}})
 	if err != nil {
 		return handleError(err)
 	}
+
+	fu, err := m.FindUserByOID(fromOID, false)
+	if err != nil {
+		return handleError(err)
+	}
+	tu, err := m.FindUserByOID(toOID, false)
+	if err != nil {
+		return handleError(err)
+	}
+
+	err = m.updateUserCache(*fu)
+	if err != nil {
+		m.logger.Debug("Redis Error", zap.String("Error", err.Error()))
+		return err
+	}
+	err = m.updateUserCache(*tu)
+	if err != nil {
+		m.logger.Debug("Redis Error", zap.String("Error", err.Error()))
+		return err
+	}
+
 	return nil
 }
 
@@ -175,6 +191,27 @@ func (m *MongoInstance) UnfollowUser(fromOID, toOID bson.ObjectId) error {
 	if err != nil {
 		return handleError(err)
 	}
+
+	fu, err := m.FindUserByOID(fromOID, false)
+	if err != nil {
+		return handleError(err)
+	}
+	tu, err := m.FindUserByOID(toOID, false)
+	if err != nil {
+		return handleError(err)
+	}
+
+	err = m.updateUserCache(*fu)
+	if err != nil {
+		m.logger.Debug("Redis Error", zap.String("Error", err.Error()))
+		return err
+	}
+	err = m.updateUserCache(*tu)
+	if err != nil {
+		m.logger.Debug("Redis Error", zap.String("Error", err.Error()))
+		return err
+	}
+
 	return nil
 }
 

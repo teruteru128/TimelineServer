@@ -28,6 +28,7 @@ func (h *APIHandler) Follow(c echo.Context) error {
 
 	req := new(BasicRequest)
 	if err := c.Bind(req); err != nil {
+		h.logger.Debug("API Error", zap.String("Error", err.Error()))
 		return c.JSON(http.StatusInternalServerError, &messageResponse{Message: ErrUnknown})
 	}
 
@@ -36,7 +37,7 @@ func (h *APIHandler) Follow(c echo.Context) error {
 		if err != nil {
 			return handleMgoError(err)
 		}
-		err = h.db.FollowUser(bson.ObjectId(idStr), f.ID)
+		err = h.db.FollowUser(bson.ObjectIdHex(idStr), f.ID)
 		if err != nil {
 			return handleMgoError(err)
 		}
@@ -47,11 +48,11 @@ func (h *APIHandler) Follow(c echo.Context) error {
 	}
 
 	if req.UserID != "" {
-		f, err := h.db.FindUserByOID(bson.ObjectId(req.UserID), true)
+		f, err := h.db.FindUserByOID(bson.ObjectIdHex(req.UserID), true)
 		if err != nil {
 			return handleMgoError(err)
 		}
-		err = h.db.FollowUser(bson.ObjectId(idStr), f.ID)
+		err = h.db.FollowUser(bson.ObjectIdHex(idStr), f.ID)
 		if err != nil {
 			return handleMgoError(err)
 		}
@@ -72,6 +73,7 @@ func (h *APIHandler) Unfollow(c echo.Context) error {
 
 	req := new(BasicRequest)
 	if err := c.Bind(req); err != nil {
+		h.logger.Debug("API Error", zap.String("Error", err.Error()))
 		return c.JSON(http.StatusInternalServerError, &messageResponse{Message: ErrUnknown})
 	}
 
@@ -80,7 +82,7 @@ func (h *APIHandler) Unfollow(c echo.Context) error {
 		if err != nil {
 			return handleMgoError(err)
 		}
-		err = h.db.UnfollowUser(bson.ObjectId(idStr), f.ID)
+		err = h.db.UnfollowUser(bson.ObjectIdHex(idStr), f.ID)
 		if err != nil {
 			return handleMgoError(err)
 		}
@@ -91,11 +93,11 @@ func (h *APIHandler) Unfollow(c echo.Context) error {
 	}
 
 	if req.UserID != "" {
-		f, err := h.db.FindUserByOID(bson.ObjectId(req.UserID), true)
+		f, err := h.db.FindUserByOID(bson.ObjectIdHex(req.UserID), true)
 		if err != nil {
 			return handleMgoError(err)
 		}
-		err = h.db.UnfollowUser(bson.ObjectId(idStr), f.ID)
+		err = h.db.UnfollowUser(bson.ObjectIdHex(idStr), f.ID)
 		if err != nil {
 			return handleMgoError(err)
 		}
@@ -158,7 +160,7 @@ func (h *APIHandler) GetFollowersID(c echo.Context) error {
 
 	user := &models.User{}
 	if id != "" {
-		user, err = h.db.FindUserByOID(bson.ObjectId(id), true)
+		user, err = h.db.FindUserByOID(bson.ObjectIdHex(id), true)
 		if err != nil {
 			return handleMgoError(err)
 		}
@@ -197,7 +199,7 @@ func (h *APIHandler) GetFollowerList(c echo.Context) error {
 
 	user := &models.User{}
 	if id != "" {
-		user, err = h.db.FindUserByOID(bson.ObjectId(id), true)
+		user, err = h.db.FindUserByOID(bson.ObjectIdHex(id), true)
 		if err != nil {
 			return handleMgoError(err)
 		}

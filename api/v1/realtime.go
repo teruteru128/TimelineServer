@@ -2,7 +2,6 @@ package v1
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/TinyKitten/TimelineServer/config"
@@ -82,11 +81,58 @@ func (h *APIHandler) RealtimeHandler(c echo.Context) error {
 	}(postChan)
 
 	for {
-		_, msg, err := ws.ReadMessage()
+		_, _, err := ws.ReadMessage()
 		if err != nil {
 			c.Logger().Error(err)
 		}
-		fmt.Printf("%s\n", msg)
+	}
+
+	return nil
+}
+
+func (h *APIHandler) UnionHandler(c echo.Context) error {
+	config := config.GetAPIConfig()
+	tokenStr := c.QueryParam("token")
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(config.Jwt), nil
+	})
+	if err != nil {
+		h.logger.Debug("API Error", zap.String("Error", err.Error()))
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+	if !token.Valid {
+		h.logger.Debug("API Error", zap.String("Error", err.Error()))
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+
+	postChan = make(chan models.PostResponse)
+
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
+	}
+	defer ws.Close()
+	defer close(postChan)
+
+	go func(postChan chan models.PostResponse) {
+		for post := range postChan {
+			bytes, err := json.Marshal(post)
+			if err != nil {
+				c.Logger().Error(err)
+			}
+			// 無条件で送信
+			err = ws.WriteMessage(websocket.TextMessage, bytes)
+			if err != nil {
+				c.Logger().Error(err)
+			}
+		}
+	}(postChan)
+
+	for {
+		_, _, err := ws.ReadMessage()
+		if err != nil {
+			c.Logger().Error(err)
+		}
 	}
 
 	return nil

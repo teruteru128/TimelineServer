@@ -10,6 +10,7 @@ import (
 
 	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/TinyKitten/TimelineServer/models"
+	"github.com/TinyKitten/TimelineServer/utils"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 )
@@ -94,6 +95,7 @@ func (h *APIHandler) GetUserPosts(c echo.Context) error {
 	userID := c.QueryParam("user_id")
 
 	if screenName != "" {
+		// ScreenNameでの検索
 		user, err := h.db.FindUser(screenName, true)
 		if err != nil {
 			return handleMgoError(err)
@@ -104,11 +106,13 @@ func (h *APIHandler) GetUserPosts(c echo.Context) error {
 		}
 
 		if limitStr == "" && cursorStr == "" {
+			// リミット指定・カーソル指定なし
 			resp := models.PostsToPostResponseArray(posts, []models.User{*user}, true)
 			return c.JSON(http.StatusOK, &resp)
 		}
 
 		if limitStr == "" && cursorStr != "" {
+			// リミット指定あり
 			cursor, err := strconv.Atoi(cursorStr)
 			if err != nil {
 				h.logger.Debug("Param Error", zap.String("Error", err.Error()))
@@ -125,6 +129,7 @@ func (h *APIHandler) GetUserPosts(c echo.Context) error {
 		}
 
 		if limitStr != "" && cursorStr == "" {
+			// カーソル指定のみあり
 			limit, err := strconv.Atoi(limitStr)
 			if err != nil {
 				h.logger.Debug("Param Error", zap.String("Error", err.Error()))
@@ -152,6 +157,7 @@ func (h *APIHandler) GetUserPosts(c echo.Context) error {
 	}
 
 	if userID != "" {
+		// IDでの検索
 		user, err := h.db.FindUserByOID(bson.ObjectIdHex(userID), true)
 		if err != nil {
 			return handleMgoError(err)
@@ -161,9 +167,166 @@ func (h *APIHandler) GetUserPosts(c echo.Context) error {
 			return handleMgoError(err)
 		}
 
-		return c.JSON(http.StatusOK, &posts)
+		if limitStr == "" && cursorStr == "" {
+			// リミット指定・カーソル指定なし
+			resp := models.PostsToPostResponseArray(posts, []models.User{*user}, true)
+			return c.JSON(http.StatusOK, &resp)
+		}
+
+		if limitStr == "" && cursorStr != "" {
+			// リミット指定あり
+			cursor, err := strconv.Atoi(cursorStr)
+			if err != nil {
+				h.logger.Debug("Param Error", zap.String("Error", err.Error()))
+				return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrBadFormat}
+			}
+
+			if cursor >= len(posts) {
+				return c.JSON(http.StatusOK, &[]models.PostResponse{})
+			}
+
+			resp := models.PostsToPostResponseArray(posts[cursor:], []models.User{*user}, true)
+			return c.JSON(http.StatusOK, &resp)
+
+		}
+
+		if limitStr != "" && cursorStr == "" {
+			// カーソル指定のみあり
+			limit, err := strconv.Atoi(limitStr)
+			if err != nil {
+				h.logger.Debug("Param Error", zap.String("Error", err.Error()))
+				return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrBadFormat}
+			}
+			resp := models.PostsToPostResponseArray(posts[:limit], []models.User{*user}, true)
+			return c.JSON(http.StatusOK, &resp)
+		}
+
+		// リミット指定・カーソル指定あり
+
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil {
+			h.logger.Debug("Param Error", zap.String("Error", err.Error()))
+			return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrBadFormat}
+		}
+		cursor, err := strconv.Atoi(cursorStr)
+		if err != nil {
+			h.logger.Debug("Param Error", zap.String("Error", err.Error()))
+			return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrBadFormat}
+		}
+		if cursor >= len(posts) {
+			return c.JSON(http.StatusOK, &[]models.PostResponse{})
+		}
+		resp := models.PostsToPostResponseArray(posts[cursor:limit], []models.User{*user}, true)
+
+		return c.JSON(http.StatusOK, &resp)
 
 	}
 
 	return c.JSON(http.StatusOK, &[]models.Post{})
+}
+
+func (h *APIHandler) GetHomePosts(c echo.Context) error {
+	config := config.GetAPIConfig()
+	tokenStr := c.QueryParam("token")
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(config.Jwt), nil
+	})
+	if err != nil {
+		h.logger.Debug("API Error", zap.String("Error", err.Error()))
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+	if !token.Valid {
+		h.logger.Debug("API Error", zap.String("Error", err.Error()))
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+	claims := token.Claims.(jwt.MapClaims)
+	id := claims["id"].(string)
+
+	limitStr := c.QueryParam("limit")
+	cursorStr := c.QueryParam("cursor")
+
+	user, err := h.db.FindUserByOID(bson.ObjectIdHex(id), true)
+	if err != nil {
+		return handleMgoError(err)
+	}
+
+	// 自分の投稿
+	posts, err := h.db.GetPostsByOIDArray(user.Posts)
+	if err != nil {
+		return handleMgoError(err)
+	}
+
+	// フォローしている人の投稿
+
+	friends, err := h.db.FindUserByOIDArray(user.Following, true)
+	if err != nil {
+		return handleMgoError(err)
+	}
+	for _, friend := range friends {
+		friendPosts, err := h.db.GetPostsByOIDArray(friend.Posts)
+		if err != nil {
+			return handleMgoError(err)
+		}
+		posts = append(posts, friendPosts...)
+	}
+
+	posts = utils.SortByPostDates(posts)
+	var senders []models.User
+
+	for _, post := range posts {
+		s, err := h.db.FindUserByOID(post.UserID, true)
+		if err != nil {
+			return handleMgoError(err)
+		}
+		senders = append(senders, *s)
+	}
+
+	if limitStr == "" && cursorStr == "" {
+		// リミット指定・カーソル指定なし
+		resp := models.PostsToPostResponseArray(posts, senders, false)
+		return c.JSON(http.StatusOK, &resp)
+	}
+
+	if limitStr == "" && cursorStr != "" {
+		// リミット指定あり
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil {
+			h.logger.Debug("Param Error", zap.String("Error", err.Error()))
+			return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrBadFormat}
+		}
+		resp := models.PostsToPostResponseArray(posts[:limit], senders[:limit], false)
+		return c.JSON(http.StatusOK, &resp)
+	}
+
+	if limitStr != "" && cursorStr == "" {
+		// カーソル指定のみあり
+		cursor, err := strconv.Atoi(cursorStr)
+		if err != nil {
+			h.logger.Debug("Param Error", zap.String("Error", err.Error()))
+			return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrBadFormat}
+		}
+		if cursor >= len(posts) {
+			return c.JSON(http.StatusOK, &[]models.PostResponse{})
+		}
+		resp := models.PostsToPostResponseArray(posts[cursor:], senders[cursor:], false)
+		return c.JSON(http.StatusOK, &resp)
+
+	}
+
+	// リミット指定・カーソル指定あり
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		h.logger.Debug("Param Error", zap.String("Error", err.Error()))
+		return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrBadFormat}
+	}
+	cursor, err := strconv.Atoi(cursorStr)
+	if err != nil {
+		h.logger.Debug("Param Error", zap.String("Error", err.Error()))
+		return &echo.HTTPError{Code: http.StatusBadRequest, Message: ErrBadFormat}
+	}
+	if cursor >= len(posts) {
+		return c.JSON(http.StatusOK, &[]models.PostResponse{})
+	}
+	resp := models.PostsToPostResponseArray(posts[cursor:limit], senders[cursor:limit], false)
+	return c.JSON(http.StatusOK, &resp)
 }

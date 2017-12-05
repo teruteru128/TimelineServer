@@ -2,111 +2,92 @@ package v1
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 
 	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/TinyKitten/TimelineServer/models"
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/googollee/go-socket.io"
+	"github.com/gorilla/websocket"
+	"github.com/labstack/echo"
 	"go.uber.org/zap"
 )
 
-const (
-	loggerTopic = "Socket.io"
+var (
+	postChan chan models.PostResponse
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
 )
 
-var postChan chan models.PostResponse
-var chanClosed chan struct{}
+const (
+	loggerTopic = "Realtime Stream"
+)
 
-func (h *APIHandler) SocketIO() http.Handler {
-	chanClosed = make(chan struct{})
-
-	server, err := socketio.NewServer(nil)
+func (h *APIHandler) RealtimeHandler(c echo.Context) error {
+	config := config.GetAPIConfig()
+	tokenStr := c.QueryParam("token")
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(config.Jwt), nil
+	})
 	if err != nil {
-		log.Fatal(err)
+		h.logger.Debug("API Error", zap.String("Error", err.Error()))
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
 	}
+	if !token.Valid {
+		h.logger.Debug("API Error", zap.String("Error", err.Error()))
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+	claims := token.Claims.(jwt.MapClaims)
+	claimID := claims["id"].(string)
 
-	server.On("connection", func(so socketio.Socket) {
-		server.On("error", func(so socketio.Socket, err error) {
-			h.logger.Debug(loggerTopic, zap.String("Error", err.Error()))
-		})
+	postChan = make(chan models.PostResponse)
 
-		// JWT Authentication
-		so.On("authenticate", func(tokenReq string) {
-			postChan = make(chan models.PostResponse)
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
+	}
+	defer ws.Close()
+	defer close(postChan)
 
-			so.On("disconnection", func() {
-				h.logger.Debug(loggerTopic, zap.String("connection", "On disconnect"))
-				close(chanClosed)
-			})
-
-			apiConfig := config.GetAPIConfig()
-			token, err := jwt.Parse(tokenReq, func(token *jwt.Token) (interface{}, error) {
-				return []byte(apiConfig.Jwt), nil
-			})
+	go func(postChan chan models.PostResponse) {
+		for post := range postChan {
+			bytes, err := json.Marshal(post)
 			if err != nil {
-				h.logger.Debug(loggerTopic, zap.String("Error", ErrInvalidJwt))
-				so.Disconnect()
-				close(chanClosed)
+				c.Logger().Error(err)
 			}
-
-			claims := token.Claims.(jwt.MapClaims)
-
-			claimID := claims["id"].(string)
-
-			err = so.Emit("authenticated")
-			if err != nil {
-				h.logger.Error(loggerTopic, zap.Error(err))
-			}
-			// UNION Timeline
-			// 投稿監視
-			for {
-				select {
-				case post := <-postChan:
-					j, err := json.Marshal(post)
-					if err != nil {
-						h.logger.Error(loggerTopic, zap.Error(err))
-						continue
-					}
-
-					// UNION timeline
-					err = so.Emit("union", string(j))
-					if err != nil {
-						h.logger.Error(loggerTopic, zap.Error(err))
-					} else {
-						h.logger.Debug(loggerTopic, zap.Any("Sent", "UNION"), zap.String("Data", string(j)))
-					}
-
-					// 自分の投稿
-					if post.User.ID == claimID {
-						err = so.Emit("home", string(j))
-						if err != nil {
-							h.logger.Error(loggerTopic, zap.Error(err))
-						} else {
-							h.logger.Debug(loggerTopic, zap.Any("Sent", claimID), zap.String("Data", string(j)))
-						}
-						continue
-					} else {
-						// 自分がフォローしている人の投稿
-						if len(post.User.Followers) != 0 {
-							for _, follower := range post.User.Followers {
-								if claimID == follower.Hex() {
-									err = so.Emit("home", string(j))
-									if err != nil {
-										h.logger.Error(loggerTopic, zap.Error(err))
-									} else {
-										h.logger.Debug(loggerTopic, zap.Any("Sent broadcast", claimID), zap.String("Data", string(j)))
-									}
-								}
+			if post.User.ID == claimID {
+				err := ws.WriteMessage(websocket.TextMessage, bytes)
+				if err != nil {
+					c.Logger().Error(err)
+				}
+			} else {
+				// 自分がフォローしている人の投稿
+				if len(post.User.Followers) != 0 {
+					for _, follower := range post.User.Followers {
+						if claimID == follower.Hex() {
+							err := ws.WriteMessage(websocket.TextMessage, bytes)
+							if err != nil {
+								c.Logger().Error(err)
 							}
 						}
 					}
-				case <-chanClosed:
-					return
 				}
 			}
-		})
-	})
-	return server
+		}
+	}(postChan)
+
+	for {
+		_, msg, err := ws.ReadMessage()
+		if err != nil {
+			c.Logger().Error(err)
+		}
+		fmt.Printf("%s\n", msg)
+	}
+
+	return nil
 }

@@ -3,6 +3,8 @@ package config
 import (
 	"flag"
 	"log"
+	"os"
+	"strconv"
 
 	"github.com/BurntSushi/toml"
 )
@@ -23,6 +25,7 @@ type APIConfig struct {
 	Endpoint string `toml:"endpoint"`
 	Secure   bool   `toml:"secure"`
 	Jwt      string `toml:"jwt"`
+	Env      string `toml:"env"`
 }
 
 // DBConfig MongoDB設定構造体
@@ -53,7 +56,7 @@ func GetConfig() Config {
 	if flag.Lookup("test.v") != nil {
 		mockAPIConfig := APIConfig{
 			Port:     8080,
-			Version:  "v1",
+			Version:  "1.0",
 			Debug:    true,
 			Endpoint: "tlstag.ddns.net",
 			Jwt:      MockJwtToken,
@@ -82,6 +85,39 @@ func GetConfig() Config {
 	if _, err := toml.DecodeFile("config.toml", &config); err != nil {
 		log.Fatal(err)
 	}
+
+	if config.API.Env == "heroku" {
+		port, _ := strconv.Atoi(os.Getenv("PORT"))
+		redisPort, _ := strconv.Atoi(os.Getenv("REDIS_PORT"))
+		herokuAPIConfig := APIConfig{
+			Port:     port,
+			Version:  "1.0",
+			Debug:    false,
+			Endpoint: "kittentlapi.herokuapp.com",
+			Jwt:      os.Getenv("JWT_TOKEN"),
+			Secure:   false,
+		}
+		herokuDBConfig := DBConfig{
+			Server:   os.Getenv("MONGO_SERVER"),
+			Database: os.Getenv("MONGO_DB_PATH"),
+		}
+		herokuCacheConfig := CacheConfig{
+			Server:   os.Getenv("REDIS_SERVER"),
+			Port:     redisPort,
+			User:     os.Getenv("REDIS_USER"),
+			Password: os.Getenv("REDIS_PASSWORD"),
+		}
+		herokuUploadImage := UploadImageConfig{
+			Path: "uploads/img/",
+		}
+		return Config{
+			API:         herokuAPIConfig,
+			DB:          herokuDBConfig,
+			Cache:       herokuCacheConfig,
+			UploadImage: herokuUploadImage,
+		}
+	}
+
 	return config
 }
 

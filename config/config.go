@@ -35,10 +35,7 @@ type DBConfig struct {
 }
 
 type CacheConfig struct {
-	Server   string `toml:"server"`
-	Port     int    `toml:"port"`
-	User     string `toml:"user"`
-	Password string `toml:"password"`
+	Server string `toml:"server"`
 }
 
 type UploadImageConfig struct {
@@ -65,8 +62,7 @@ func GetConfig() Config {
 			Database: "timeline",
 		}
 		mockCacheConfig := CacheConfig{
-			Server: "localhost",
-			Port:   6379,
+			Server: "redis://localhost",
 		}
 		mockUploadImage := UploadImageConfig{
 			Path: "",
@@ -86,7 +82,6 @@ func GetConfig() Config {
 
 	if config.API.Env == "heroku" {
 		port, _ := strconv.Atoi(os.Getenv("PORT"))
-		redisPort, _ := strconv.Atoi(os.Getenv("REDIS_PORT"))
 		herokuAPIConfig := APIConfig{
 			Port:     port,
 			Version:  "1.0",
@@ -100,10 +95,7 @@ func GetConfig() Config {
 			Database: os.Getenv("MONGO_DBNAME"),
 		}
 		herokuCacheConfig := CacheConfig{
-			Server:   os.Getenv("REDIS_SERVER"),
-			Port:     redisPort,
-			User:     os.Getenv("REDIS_USER"),
-			Password: os.Getenv("REDIS_PASSWORD"),
+			Server: os.Getenv("REDIS_URL"),
 		}
 		herokuUploadImage := UploadImageConfig{
 			Path: "uploads/img/",

@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/TinyKitten/TimelineServer/config"
@@ -15,12 +14,10 @@ type RedisInstance struct {
 }
 
 func newPool(conf config.CacheConfig) *redis.Pool {
-	port := strconv.Itoa(conf.Port)
-	host := conf.Server + ":" + port
 	return &redis.Pool{
 		MaxIdle:     3,
 		IdleTimeout: 240 * time.Second,
-		Dial:        func() (redis.Conn, error) { return redis.Dial("tcp", host) },
+		Dial:        func() (redis.Conn, error) { return redis.Dial("tcp", conf.Server) },
 	}
 }
 

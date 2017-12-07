@@ -9,10 +9,8 @@ secure = false
 env = "heroku"
 
 [DB]
-server = "mongo:27017"
+server = "mongodb://mongo:27017"
 database = "timeline"
-user = ""
-password = ""
 
 [Cache]
 server = "redis"

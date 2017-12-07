@@ -24,10 +24,7 @@ func handleError(err error) error {
 }
 
 func (m *MongoInstance) url() string {
-	if m.conf.User == "" || m.conf.Password == "" {
-		return m.conf.Server
-	}
-	return m.conf.User + ":" + m.conf.Password + "@" + m.conf.Server
+	return m.conf.Server + "/" + m.db()
 }
 
 func (m *MongoInstance) db() string {

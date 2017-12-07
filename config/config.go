@@ -32,8 +32,6 @@ type APIConfig struct {
 type DBConfig struct {
 	Server   string `toml:"server"`
 	Database string `toml:"database"`
-	User     string `toml:"user"`
-	Password string `toml:"password"`
 }
 
 type CacheConfig struct {
@@ -98,8 +96,8 @@ func GetConfig() Config {
 			Secure:   false,
 		}
 		herokuDBConfig := DBConfig{
-			Server:   os.Getenv("MONGO_SERVER"),
-			Database: os.Getenv("MONGO_DB_PATH"),
+			Server:   os.Getenv("MONGO_HOST"),
+			Database: os.Getenv("MONGO_DBNAME"),
 		}
 		herokuCacheConfig := CacheConfig{
 			Server:   os.Getenv("REDIS_SERVER"),

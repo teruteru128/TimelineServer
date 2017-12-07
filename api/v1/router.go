@@ -36,7 +36,7 @@ func NewV1Router() *echo.Echo {
 	super.POST("/update_official.json", h.ASetOfficialFlag)
 
 	// Static
-	v1.Static("/static", "static")
+	v1.Static("/uploads", "uploads")
 
 	// Friendship
 	friendship := v1.Group("/friendships")

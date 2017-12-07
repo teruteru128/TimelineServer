@@ -21,6 +21,7 @@ type APIConfig struct {
 	Version  string `toml:"version"`
 	Debug    bool   `toml:"debug"`
 	Endpoint string `toml:"endpoint"`
+	Secure   bool   `toml:"secure"`
 	Jwt      string `toml:"jwt"`
 }
 
@@ -56,6 +57,7 @@ func GetConfig() Config {
 			Debug:    true,
 			Endpoint: "tlstag.ddns.net",
 			Jwt:      MockJwtToken,
+			Secure:   false,
 		}
 		mockDBConfig := DBConfig{
 			Server:   "localhost:27017",

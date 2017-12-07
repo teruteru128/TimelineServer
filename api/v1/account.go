@@ -211,7 +211,7 @@ func (h *APIHandler) SetAccountSettings(c echo.Context) error {
 		}
 	}
 	if req.URL != "" {
-		err := h.db.UpdateUser(id, "url", req.URL)
+		err := h.db.UpdateUser(id, "websiteUrl", req.URL)
 		if err != nil {
 			h.logger.Debug("API Error", zap.String("Error", err.Error()))
 			return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}
@@ -290,8 +290,14 @@ func (h *APIHandler) UpdateAccountProfileImage(c echo.Context) error {
 
 	cfg := config.GetAPIConfig()
 	portStr := strconv.Itoa(cfg.Port)
-	avatarUrl := "https://" + cfg.Endpoint + ":" + portStr + "/" + cfg.Version + "/" + filePath
-	err = h.db.UpdateUser(id, "avatarUrl", avatarUrl)
+
+	var avatarURL string
+	if cfg.Secure {
+		avatarURL = "https://" + cfg.Endpoint + ":" + portStr + "/" + cfg.Version + "/" + filePath
+	} else {
+		avatarURL = "http://" + cfg.Endpoint + ":" + portStr + "/" + cfg.Version + "/" + filePath
+	}
+	err = h.db.UpdateUser(id, "avatarUrl", avatarURL)
 	if err != nil {
 		h.logger.Debug("API Error", zap.String("Error", err.Error()))
 		return &echo.HTTPError{Code: http.StatusInternalServerError, Message: ErrUnknown}

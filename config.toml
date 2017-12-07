@@ -1,7 +1,7 @@
 [API]
 port = 4000
 version = "1.0"
-debug = true
+debug = false
 endpoint = "localhost"
 jwt = "apGmlulxoovY00sse099yV5hMaUHZnP7" # CHANGE ME
 secure = false

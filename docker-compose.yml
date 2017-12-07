@@ -1,18 +1,32 @@
-web:
-  build: .
-  command: 'bash -c ''TimelineServer'''
-  working_dir: /app/user
-  environment:
-    PORT: 8080
-  ports:
-    - '8080:8080'
-shell:
-  build: .
-  command: bash
-  working_dir: /app/user
-  environment:
-    PORT: 8080
-  ports:
-    - '8080:8080'
-  volumes:
-    - '.:/app/user'
+version: '2'
+
+services:
+  staging:
+    restart: always
+    build: .
+    ports:
+      - "4000:4000"
+    command: go run server.go
+    volumes:
+      - data:/go
+      - .:/go/src/github.com/TinyKitten/TimelineServer
+    links:
+      - redis
+      - mongo
+
+  redis:
+    restart: always
+    image: redis
+    volumes:
+      - ./data/redis:/data
+    command: redis-server --appendonly yes
+
+  mongo:
+    restart: always
+    image: mongo
+    volumes:
+      - ./data/mongo:/data/db
+
+volumes:
+  data:
+    driver: 'local'

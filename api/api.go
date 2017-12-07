@@ -25,7 +25,7 @@ func StartServer() {
 
 	if apiConfig.Secure {
 		r.AutoTLSManager.Cache = autocert.DirCache(".cache")
-		r.Logger.Fatal(r.StartAutoTLS(":443"))
+		r.Logger.Fatal(r.StartAutoTLS(host))
 	} else {
 		r.Logger.Fatal(r.Start(host))
 	}

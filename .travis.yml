@@ -9,24 +9,9 @@ before_install:
 script:
 - "$GOPATH/bin/goveralls -service=travis-ci"
 deploy:
-- provider: s3
-  access_key_id: AKIAI3FALHJPZMHRQXYA
-  secret_access_key: &1
-    secure: xgBbih/FoU+8aNrfsP9NyxfOSaEA2YzOaT8k6YWxbJUf1i+Digjm5NiCEVW2J71nzsAAlwMZnPL2mJ3tuBNOS2E5ELOmyhXTRCGbWvC/9CHs4jlscZbQtDA7ipgroinCKs6boY2G1k+oVLvniT54WuiSxsN52h6azAvRZ24u0QBlGKKKpFWr4NuUyG9uUGhsZTsH2Bn7ASSJsu2mTSaR+uIuLqrdaBT8spaDKBydWME8jBNtr9Zv6y+4dj6Bic9HB1gFkwIkOeTNjUaQ/7Nd52ESgYQXGd5D3K2pHPKwtdNkgJ3iILTMXbor3iqUn4qmDtHV+noAgGEzvPTaPtWSpyqTC3bBsAKoUVroVhDCHtFAEER8ttdXPKSPtL3GNVmi4owIH6WFJFUrXl11rMAOkZzCIU+b6O6zPcGn8HJQbgCo0usdfkyIpgAdnxFIK+dyz2QmvXGuIwW7z9h2rma1MXPzG/rKWzMLyTftWZmWWkjGeLzM0uSXIAABF5eVqR0MzU0g4mivB3XPo9LzdKBrHCabv2OiaDGuwuWMm34UvLo/7Tpm12wlzPkjFT9PbiGpO5CHsvlLOWrkMRDzcqUdWubSMtCz3jG6whaf6aInY0defnGD+bFDu5NQ8++MmES+UPP15XgxZMG6UwX4Mt1E2bkQPihyUgIoy5tu5j29Tik=
-  local_dir: dpl_cd_upload
-  skip_cleanup: true
-  on: &2
+  provider: heroku
+  api_key:
+    secure: r9WsZdgMqa1kiKfuBkxGfdyIeQO9vw85xtjjaM2KiC0ODxbonfog/rowW4vgrwhe4ZFKPpDZEVTD5RzNGlFRw7sDUUptQm/9Y6Cq3yQ9UhImT/thHb7C/yBgKePqAlM1kWMgd0JE3jIHcT32wRKMEz42B+c3diur4FNp2nEYQWy+cHU9esjzRJCyLCQWDlKIn+TFsgHKs9AN3z0exmzgoFqZTx2FSA3+9GT3TicgcyQEw2Jaq2Y91SC8dKitGvukjlQSu1GFNmNn0jjNGaNja5R1RU1x+5E/gRq+uXIWh9v7P9xi/xhnq3uTUF4VvNz4klFrt1Sch3zwS8iDb4ORb9Y67yHbPjbDDzxeOXgXk5xcmuIgiwYab72d3wzTUNvSNoJ1o/vucQYxMAQbvfxlQTRO3gaIEywY0faTzn1iaNZbm7rKu5NX1zxRYp8b7ikidIvyoQMEfCP81rCIVzxiqJ7lC/fguWknTyF9gSH4mC1XLjEdKqX3vvwKk14U81d2iIRx18cW22dfmHfvImEOJwGL1y1oq57AFLF04skkgnf+gCM/o4oZv248yBR0XuhtkmMo+I7YNlWqaPFlqzv9HYU18CGAfyXK6Bk3QzjQVzWzzGA6uO5YAsWREhwgW6Wnrj5BXSO8Ucl3JzUdHNlBMdZxwPOfNzrhQ5C7nAX9+1E=
+  app: TimelineServer
+  on:
     repo: TinyKitten/TimelineServer
-  bucket: ''
-- provider: codedeploy
-  access_key_id: AKIAI3FALHJPZMHRQXYA
-  secret_access_key: *1
-  bucket: 'S3 Bucket'
-  key: 'latest/TimelineServer.zip'
-  bundle_type: ''
-  application: TimelineServer
-  deployment_group: TImelineServerGroup-2clye6k
-  on: *2
-before_deploy:
-- mkdir -p dpl_cd_upload
-- mv '' dpl_cd_upload/''

@@ -6,6 +6,7 @@ import (
 	"github.com/TinyKitten/TimelineServer/config"
 	"github.com/TinyKitten/TimelineServer/logger"
 	"github.com/garyburd/redigo/redis"
+	"github.com/soveran/redisurl"
 	"go.uber.org/zap"
 )
 
@@ -17,7 +18,9 @@ func newPool(conf config.CacheConfig) *redis.Pool {
 	return &redis.Pool{
 		MaxIdle:     3,
 		IdleTimeout: 240 * time.Second,
-		Dial:        func() (redis.Conn, error) { return redis.Dial("tcp", conf.Server) },
+		Dial: func() (redis.Conn, error) {
+			return redisurl.ConnectToURL(conf.Server)
+		},
 	}
 }
 

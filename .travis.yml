@@ -8,16 +8,3 @@ before_install:
 - go get github.com/mattn/goveralls
 script:
 - "$GOPATH/bin/goveralls -service=travis-ci"
-deploy:
-  provider: codedeploy
-  access_key_id: AKIAI3FALHJPZMHRQXYA
-  secret_access_key:
-    secure: ZUgvm+3gXw0+wak5CYb0hYnCJITY4oGV46FMG/XJODqFPpXGwLL9Asb8i0L+6Gk4vROjOWiFK8D48DUzqM/1bzyAje3zzwO+ygqDfB6+6ynLrpEVxCfJ6qGQrAsfI4cWlI/svyjWKYWPRFtJToA0PKOlgDfj3coIyvfBIXo45NcvlI3dZmuz8wcKey+qKVaZqZdD9pvZWTI1FPIDJ5DWOMfa6A3wiv8BlU38ZlN3QBOJOw3LWuj/FIaElXxUtprihQbJCm3kTSXUjNYX0w3aaBF8CYWx2Ydpko3YDgOe8eyHhvhNKt3Wp8cYL8M3NY3/9mYxN8Se08YzM5N0rfieJapejAZ2R923lJ7ZKavOKV9yHqFedonWVd8FF1Ltpp15ioafuEEXE50P27XCMN0V87EpbQS+bIr0+eR2sbAef3Doi5L5q/BoHUFzxnbzHeaHZudJJGstKO8ooMl0pyx8wtf9y7N1cVKZQ46M0hMpJlcuWbIjZ2G19L7Lpn3kHhyJoHTUH/jmq8H1X2QyLJExeL41wZH2LqtSTH/0bpZa3Qo8I84L6JczUEpPz7ws3pKbiSv7PqKsnr/Oi/mmvbjKWpQq50H4LItPh68ysrj+z1BlzAQA/lOKbZnwDRnLHzA0Z0NFJltMHsdJOTIUzx9mRe+C9rkPbBGyoUb0E+A0sYo=
-  bucket: timelineserver
-  key: latest/server.zip
-  bundle_type: zip
-  application: TimelineServer
-  deployment_group: TimelineServerDeployGroup
-  on:
-    repo: TinyKitten/TimelineServer
-    branch: develop

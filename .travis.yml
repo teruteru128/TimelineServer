@@ -8,10 +8,3 @@ before_install:
 - go get github.com/mattn/goveralls
 script:
 - "$GOPATH/bin/goveralls -service=travis-ci"
-deploy:
-  provider: heroku
-  api_key:
-    secure: r9WsZdgMqa1kiKfuBkxGfdyIeQO9vw85xtjjaM2KiC0ODxbonfog/rowW4vgrwhe4ZFKPpDZEVTD5RzNGlFRw7sDUUptQm/9Y6Cq3yQ9UhImT/thHb7C/yBgKePqAlM1kWMgd0JE3jIHcT32wRKMEz42B+c3diur4FNp2nEYQWy+cHU9esjzRJCyLCQWDlKIn+TFsgHKs9AN3z0exmzgoFqZTx2FSA3+9GT3TicgcyQEw2Jaq2Y91SC8dKitGvukjlQSu1GFNmNn0jjNGaNja5R1RU1x+5E/gRq+uXIWh9v7P9xi/xhnq3uTUF4VvNz4klFrt1Sch3zwS8iDb4ORb9Y67yHbPjbDDzxeOXgXk5xcmuIgiwYab72d3wzTUNvSNoJ1o/vucQYxMAQbvfxlQTRO3gaIEywY0faTzn1iaNZbm7rKu5NX1zxRYp8b7ikidIvyoQMEfCP81rCIVzxiqJ7lC/fguWknTyF9gSH4mC1XLjEdKqX3vvwKk14U81d2iIRx18cW22dfmHfvImEOJwGL1y1oq57AFLF04skkgnf+gCM/o4oZv248yBR0XuhtkmMo+I7YNlWqaPFlqzv9HYU18CGAfyXK6Bk3QzjQVzWzzGA6uO5YAsWREhwgW6Wnrj5BXSO8Ucl3JzUdHNlBMdZxwPOfNzrhQ5C7nAX9+1E=
-  app: TimelineServer
-  on:
-    repo: TinyKitten/TimelineServer

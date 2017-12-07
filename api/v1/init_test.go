@@ -3,7 +3,6 @@ package v1
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/TinyKitten/TimelineServer/config"
@@ -35,12 +34,8 @@ func TestMain(m *testing.M) {
 			Server:   fmt.Sprintf("localhost:%s", resource.GetPort("27017/tcp")),
 			Database: "testing",
 		}
-		cachePort, err := strconv.Atoi(redisResource.GetPort("6379/tcp"))
-		if err != nil {
-			log.Fatal(err)
-		}
 		cacheConf := config.CacheConfig{
-			Port: cachePort,
+			Server: "redis://localhost:" + redisResource.GetPort("6379/tcp"),
 		}
 		ins, err := db.NewMongoInstance(conf, cacheConf)
 		if err != nil {

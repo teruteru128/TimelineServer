@@ -5,8 +5,6 @@ debug = true
 endpoint = "localhost"
 jwt = "apGmlulxoovY00sse099yV5hMaUHZnP7" # CHANGE ME
 secure = false
-# env = "local"
-env = "heroku"
 
 [DB]
 server = "mongodb://mongo:27017"

@@ -25,7 +25,6 @@ type APIConfig struct {
 	Endpoint string `toml:"endpoint"`
 	Secure   bool   `toml:"secure"`
 	Jwt      string `toml:"jwt"`
-	Env      string `toml:"env"`
 }
 
 // DBConfig MongoDB設定構造体
@@ -79,8 +78,7 @@ func GetConfig() Config {
 	if _, err := toml.DecodeFile("config.toml", &config); err != nil {
 		log.Fatal(err)
 	}
-
-	if config.API.Env == "heroku" {
+	if os.Getenv("ENV") == "heroku" {
 		port, _ := strconv.Atoi(os.Getenv("PORT"))
 		herokuAPIConfig := APIConfig{
 			Port:     port,

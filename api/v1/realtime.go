@@ -112,7 +112,6 @@ func (h *APIHandler) UnionHandler(c echo.Context) error {
 		return err
 	}
 	defer ws.Close()
-	defer close(postChan)
 
 	go func(postChan chan models.PostResponse) {
 		for post := range postChan {

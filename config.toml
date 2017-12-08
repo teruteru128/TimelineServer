@@ -2,9 +2,9 @@
 port = 443
 version = "1.0"
 debug = true
-endpoint = "localhost"
+endpoint = "api.timeline.blue"
 jwt = "apGmlulxoovY00sse099yV5hMaUHZnP7" # CHANGE ME
-secure = false
+secure = true
 
 [DB]
 server = "mongodb://mongo:27017"

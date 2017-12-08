@@ -21,7 +21,7 @@ func StartServer() {
 	apiConfig := config.GetAPIConfig()
 	port := strconv.Itoa(apiConfig.Port)
 
-	host := apiConfig.Endpoint + ":" + port
+	host := ":" + port
 
 	if apiConfig.Secure {
 		r.AutoTLSManager.Cache = autocert.DirCache(".cache")

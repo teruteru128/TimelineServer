@@ -1,7 +1,7 @@
 [API]
 port = 4000
 version = "1.0"
-debug = false
+debug = true
 endpoint = "localhost"
 jwt = "apGmlulxoovY00sse099yV5hMaUHZnP7" # CHANGE ME
 secure = false
@@ -11,7 +11,7 @@ server = "mongodb://mongo:27017"
 database = "timeline"
 
 [Cache]
-server = "redis://redis"
+server = "redis://redis:6379"
 
 [UploadImage]
 path = "uploads/img/"

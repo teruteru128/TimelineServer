@@ -22,6 +22,7 @@ key.pem
 TimelineServer
 
 uploads/img/*
+!uploads/img/.gitkeep
 
 data/redis/*
 data/mongo/*

@@ -1,5 +1,5 @@
 [API]
-port = 4000
+port = 443
 version = "1.0"
 debug = true
 endpoint = "localhost"

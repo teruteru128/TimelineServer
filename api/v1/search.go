@@ -7,6 +7,7 @@ import (
 	"github.com/TinyKitten/TimelineServer/models"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
+	mgo "gopkg.in/mgo.v2"
 )
 
 func (h *APIHandler) SearchUserHandler(c echo.Context) error {
@@ -27,6 +28,10 @@ func (h *APIHandler) SearchUserHandler(c echo.Context) error {
 
 	users, err := h.db.SearchUser(query, 5)
 	if err != nil {
+		if err == mgo.ErrNotFound {
+			return &echo.HTTPError{Code: http.StatusOK, Message: ErrNotFound}
+		}
+
 		return handleMgoError(err)
 	}
 

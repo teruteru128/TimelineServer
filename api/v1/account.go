@@ -139,7 +139,7 @@ func (h *APIHandler) GetUser(c echo.Context) error {
 	}
 
 	if userId != "" {
-		user, err := h.db.FindUserByOID(bson.ObjectId(userId), true)
+		user, err := h.db.FindUserByOID(bson.ObjectIdHex(userId), true)
 		if err != nil {
 			return handleMgoError(err)
 		}

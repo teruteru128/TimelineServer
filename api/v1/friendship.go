@@ -42,6 +42,10 @@ func (h *APIHandler) Follow(c echo.Context) error {
 			return handleMgoError(err)
 		}
 
+		h.db.InsertEvent(bson.ObjectIdHex(idStr),
+			bson.ObjectIdHex(req.UserID),
+			models.FollowEvent)
+
 		resp := models.UserToUserResponse(*f)
 
 		return c.JSON(http.StatusOK, &resp)
@@ -56,6 +60,10 @@ func (h *APIHandler) Follow(c echo.Context) error {
 		if err != nil {
 			return handleMgoError(err)
 		}
+
+		h.db.InsertEvent(bson.ObjectIdHex(idStr),
+			bson.ObjectIdHex(req.UserID),
+			models.FollowEvent)
 
 		resp := models.UserToUserResponse(*f)
 
@@ -87,6 +95,10 @@ func (h *APIHandler) Unfollow(c echo.Context) error {
 			return handleMgoError(err)
 		}
 
+		h.db.InsertEvent(bson.ObjectIdHex(idStr),
+			bson.ObjectIdHex(req.UserID),
+			models.UnfollowEvent)
+
 		resp := models.UserToUserResponse(*f)
 
 		return c.JSON(http.StatusOK, &resp)
@@ -101,6 +113,10 @@ func (h *APIHandler) Unfollow(c echo.Context) error {
 		if err != nil {
 			return handleMgoError(err)
 		}
+
+		h.db.InsertEvent(bson.ObjectIdHex(idStr),
+			bson.ObjectIdHex(req.UserID),
+			models.UnfollowEvent)
 
 		resp := models.UserToUserResponse(*f)
 

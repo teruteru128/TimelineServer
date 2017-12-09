@@ -62,15 +62,17 @@ func NewV1Router() *echo.Echo {
 	statuses.GET("/union.json", h.UnionHandler)
 	statuses.GET("/list.json", h.GetUserPosts)
 	statuses.GET("/home.json", h.GetHomePosts)
-
-	demo := v1.Group("/demo")
-	demo.GET("/stream.json", h.SampleStreamHandler)
+	statuses.GET("/single.json", h.GetSinglePost)
 
 	statuses.Use(middleware.JWT([]byte(apiConfig.Jwt)))
 	statuses.POST("/update.json", h.UpdateStatus)
 
 	search := v1.Group("/search")
 	search.GET("/user.json", h.SearchUserHandler)
+
+	event := v1.Group("/event")
+	event.Use(middleware.JWT([]byte(apiConfig.Jwt)))
+	event.GET("/list.json", h.EventListHandler)
 
 	return e
 }

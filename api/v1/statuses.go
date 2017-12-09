@@ -318,3 +318,34 @@ func (h *APIHandler) GetHomePosts(c echo.Context) error {
 	resp := models.PostsToPostResponseArray(posts[cursor:limit], senders[cursor:limit], false)
 	return c.JSON(http.StatusOK, &resp)
 }
+
+// GetSinglePost IDに一致する単一のポストを返す
+func (h *APIHandler) GetSinglePost(c echo.Context) error {
+	config := config.GetAPIConfig()
+	tokenStr := c.QueryParam("token")
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(config.Jwt), nil
+	})
+	if err != nil {
+		h.logger.Debug("API Error", zap.String("Error", err.Error()))
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+	if !token.Valid {
+		h.logger.Debug("API Error", zap.String("Error", err.Error()))
+		return &echo.HTTPError{Code: http.StatusForbidden, Message: ErrInvalidJwt}
+	}
+	postID := c.QueryParam("id")
+	post, err := h.db.FindPost(bson.ObjectIdHex(postID), true)
+	if err != nil {
+		return handleMgoError(err)
+	}
+
+	author, err := h.db.FindUserByOID(post.UserID, true)
+	if err != nil {
+		return handleMgoError(err)
+	}
+
+	resp := models.PostToPostResponse(*post, *author)
+
+	return c.JSON(http.StatusOK, &resp)
+}

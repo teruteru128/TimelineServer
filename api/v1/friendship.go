@@ -43,7 +43,7 @@ func (h *APIHandler) Follow(c echo.Context) error {
 		}
 
 		h.db.InsertEvent(bson.ObjectIdHex(idStr),
-			bson.ObjectIdHex(req.UserID),
+			f.ID,
 			models.FollowEvent)
 
 		resp := models.UserToUserResponse(*f)
@@ -96,7 +96,7 @@ func (h *APIHandler) Unfollow(c echo.Context) error {
 		}
 
 		h.db.InsertEvent(bson.ObjectIdHex(idStr),
-			bson.ObjectIdHex(req.UserID),
+			f.ID,
 			models.UnfollowEvent)
 
 		resp := models.UserToUserResponse(*f)

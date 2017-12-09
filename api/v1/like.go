@@ -44,6 +44,11 @@ func (h *APIHandler) CreateLike(c echo.Context) error {
 
 		resp := models.PostToPostResponse(*updated, *sender)
 
+		h.db.InsertPostEvent(bson.ObjectIdHex(idStr),
+			sender.ID,
+			bson.ObjectIdHex(req.PostID),
+			models.LikedEvent)
+
 		return c.JSON(http.StatusOK, &resp)
 	}
 
@@ -76,6 +81,10 @@ func (h *APIHandler) DestroyLike(c echo.Context) error {
 		if err != nil {
 			return handleMgoError(err)
 		}
+
+		h.db.InsertEvent(bson.ObjectIdHex(idStr),
+			sender.ID,
+			models.DislikedEvent)
 
 		resp := models.PostToPostResponse(*updated, *sender)
 

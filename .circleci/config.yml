@@ -2,11 +2,10 @@
 #
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
-dependencies:
-  pre:
-    - sudo apt-get update; sudo apt-get install libsasl2-dev
 jobs:
   build:
+    services:
+      - docker
     docker:
       # specify the version
       - image: circleci/golang:1.8
@@ -25,8 +24,6 @@ jobs:
       - checkout
 
       # specify any bash command here prefixed with `run: `
+      - run: sudo apt-get update; sudo apt-get install libsasl2-dev
       - run: go get -v -t -d ./...
       - run: go test -v ./...
-machine:
-  services:
-    - docker

@@ -53,34 +53,34 @@ func (h *APIHandler) RealtimeHandler(c echo.Context) error {
 	defer ws.Close()
 	defer close(postChan)
 
-	go func(postChan chan models.PostResponse) {
-		for post := range postChan {
-			bytes, err := json.Marshal(post)
-			if err != nil {
-				c.Logger().Error(err)
-			}
-			if post.User.ID == claimID {
-				err := ws.WriteMessage(websocket.TextMessage, bytes)
+	for {
+		go func(postChan chan models.PostResponse) {
+			for post := range postChan {
+				bytes, err := json.Marshal(post)
 				if err != nil {
 					c.Logger().Error(err)
 				}
-			} else {
-				// 自分がフォローしている人の投稿
-				if len(post.User.Followers) != 0 {
-					for _, follower := range post.User.Followers {
-						if claimID == follower.Hex() {
-							err := ws.WriteMessage(websocket.TextMessage, bytes)
-							if err != nil {
-								c.Logger().Error(err)
+				if post.User.ID == claimID {
+					err := ws.WriteMessage(websocket.TextMessage, bytes)
+					if err != nil {
+						c.Logger().Error(err)
+					}
+				} else {
+					// 自分がフォローしている人の投稿
+					if len(post.User.Followers) != 0 {
+						for _, follower := range post.User.Followers {
+							if claimID == follower.Hex() {
+								err := ws.WriteMessage(websocket.TextMessage, bytes)
+								if err != nil {
+									c.Logger().Error(err)
+								}
 							}
 						}
 					}
 				}
 			}
-		}
-	}(postChan)
+		}(postChan)
 
-	for {
 		_, _, err := ws.ReadMessage()
 		if err != nil {
 			c.Logger().Error(err)
@@ -113,21 +113,21 @@ func (h *APIHandler) UnionHandler(c echo.Context) error {
 	}
 	defer ws.Close()
 
-	go func(postChan chan models.PostResponse) {
-		for post := range postChan {
-			bytes, err := json.Marshal(post)
-			if err != nil {
-				c.Logger().Error(err)
-			}
-			// 無条件で送信
-			err = ws.WriteMessage(websocket.TextMessage, bytes)
-			if err != nil {
-				c.Logger().Error(err)
-			}
-		}
-	}(postChan)
-
 	for {
+		go func(postChan chan models.PostResponse) {
+			for post := range postChan {
+				bytes, err := json.Marshal(post)
+				if err != nil {
+					c.Logger().Error(err)
+				}
+				// 無条件で送信
+				err = ws.WriteMessage(websocket.TextMessage, bytes)
+				if err != nil {
+					c.Logger().Error(err)
+				}
+			}
+		}(postChan)
+
 		_, _, err := ws.ReadMessage()
 		if err != nil {
 			c.Logger().Error(err)

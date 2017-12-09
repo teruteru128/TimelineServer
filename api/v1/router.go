@@ -62,10 +62,7 @@ func NewV1Router() *echo.Echo {
 	statuses.GET("/union.json", h.UnionHandler)
 	statuses.GET("/list.json", h.GetUserPosts)
 	statuses.GET("/home.json", h.GetHomePosts)
-<<<<<<< HEAD
-=======
 	statuses.GET("/single.json", h.GetSinglePost)
->>>>>>> develop
 
 	statuses.Use(middleware.JWT([]byte(apiConfig.Jwt)))
 	statuses.POST("/update.json", h.UpdateStatus)

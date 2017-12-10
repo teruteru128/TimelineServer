@@ -28,3 +28,5 @@ data/redis/*
 data/mongo/*
 
 .idea
+
+.DS_Store

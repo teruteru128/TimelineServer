@@ -30,3 +30,6 @@ data/mongo/*
 .idea
 
 .DS_Store
+
+.vscode/
+server.log

@@ -1,0 +1,16 @@
+{
+    "Version": "v1",
+    "Debug": true,
+    "Endpoint": "localhost",
+    "JWT_TOKEN": "DEFAULT_JWT_TOKEN_CHANGE_ME",
+    "Secure": false,
+    "DB_HOST": "mongo",
+    "DB_USERNAME": "",
+    "DB_PASSWORD": "",
+    "DB_PORT": 27017,
+    "DB_NAME": "timeline_dev",
+    "REDIS_HOST": "localhost",
+    "REDIS_PASSWORD": "",
+    "REDIS_PORT": 6379,
+    "IMAGE_UPLOAD_PATH": "/uploads/img"
+}

@@ -33,7 +33,7 @@ func NewRedisInstance(conf config.CacheConfig) RedisInstance {
 }
 
 func handleError(err error) error {
-	logger := logger.GetLogger()
+	logger := logger.NewLogger()
 	if err == redis.ErrNil {
 		logger.Info("Redis Info", zap.String("Error", err.Error()))
 		return nil

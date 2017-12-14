@@ -1,12 +1,10 @@
 package config
 
 import (
-	"flag"
-	"log"
+	"fmt"
 	"os"
-	"strconv"
 
-	"github.com/BurntSushi/toml"
+	"github.com/spf13/viper"
 )
 
 // Config 設定構造体
@@ -19,114 +17,100 @@ type Config struct {
 
 // APIConfig API設定構造体
 type APIConfig struct {
-	Port     int    `toml:"port"`
-	Version  string `toml:"version"`
-	Debug    bool   `toml:"debug"`
-	Endpoint string `toml:"endpoint"`
-	Secure   bool   `toml:"secure"`
-	Jwt      string `toml:"jwt"`
+	Version  string
+	Debug    bool
+	Endpoint string
+	Secure   bool
+	Jwt      string
 }
 
 // DBConfig MongoDB設定構造体
 type DBConfig struct {
-	Server   string `toml:"server"`
-	Database string `toml:"database"`
+	Server   string
+	Database string
 }
 
 type CacheConfig struct {
-	Server string `toml:"server"`
+	Server string
 }
 
 type UploadImageConfig struct {
-	Path string `toml:"path"`
+	Path string
 }
 
-const (
-	MockJwtToken = "token"
-)
+func init() {
+	viper.SetDefault("Version", "v1")
+	viper.SetDefault("Debug", false)
+	viper.SetDefault("Endpoint", "localhost")
+	viper.SetDefault("JWT_TOKEN", "DEFAULT_JWT_TOKEN_CHANGE_ME")
+	viper.SetDefault("Secure", false)
 
-// GetConfig TOML設定ファイルから設定を取得
-func GetConfig() Config {
-	if flag.Lookup("test.v") != nil {
-		mockAPIConfig := APIConfig{
-			Port:     8080,
-			Version:  "1.0",
-			Debug:    true,
-			Endpoint: "tlstag.ddns.net",
-			Jwt:      MockJwtToken,
-			Secure:   false,
-		}
-		mockDBConfig := DBConfig{
-			Server:   "localhost:27017",
-			Database: "timeline",
-		}
-		mockCacheConfig := CacheConfig{
-			Server: "redis://localhost",
-		}
-		mockUploadImage := UploadImageConfig{
-			Path: "",
-		}
-		return Config{
-			API:         mockAPIConfig,
-			DB:          mockDBConfig,
-			Cache:       mockCacheConfig,
-			UploadImage: mockUploadImage,
-		}
-	}
+	viper.SetDefault("DB_HOST", "mongo")
+	viper.SetDefault("DB_USERNAME", "")
+	viper.SetDefault("DB_PASSWORD", "")
+	viper.SetDefault("DB_PORT", 27017)
+	viper.SetDefault("DB_NAME", "timeline_dev")
 
-	var config Config
-	if _, err := toml.DecodeFile("config.toml", &config); err != nil {
-		log.Fatal(err)
-	}
-	if os.Getenv("ENV") == "heroku" {
-		port, _ := strconv.Atoi(os.Getenv("PORT"))
-		herokuAPIConfig := APIConfig{
-			Port:     port,
-			Version:  "1.0",
-			Debug:    false,
-			Endpoint: "kittentlapi.herokuapp.com",
-			Jwt:      os.Getenv("JWT_TOKEN"),
-			Secure:   false,
-		}
-		herokuDBConfig := DBConfig{
-			Server:   os.Getenv("MONGO_HOST"),
-			Database: os.Getenv("MONGO_DBNAME"),
-		}
-		herokuCacheConfig := CacheConfig{
-			Server: os.Getenv("REDIS_URL"),
-		}
-		herokuUploadImage := UploadImageConfig{
-			Path: "uploads/img/",
-		}
-		return Config{
-			API:         herokuAPIConfig,
-			DB:          herokuDBConfig,
-			Cache:       herokuCacheConfig,
-			UploadImage: herokuUploadImage,
-		}
-	}
+	viper.SetDefault("REDIS_HOST", "localhost")
+	viper.SetDefault("REDIS_PASSWORD", "")
+	viper.SetDefault("REDIS_PORT", 6379)
 
-	return config
+	viper.SetDefault("IMAGE_UPLOAD_PATH", "/uploads/img")
+
+	viper.SetConfigName("config")
+	err := viper.ReadInConfig()
+	if err != nil {
+		fmt.Println("config file not found. using default configurations.")
+	}
 }
 
-// GetAPIConfig TOML設定ファイルからAPI設定を取得
+// GetAPIConfig API設定を取得
 func GetAPIConfig() APIConfig {
-	baseConfig := GetConfig()
-	return baseConfig.API
+	conf := APIConfig{
+		Version:  viper.GetString("Version"),
+		Debug:    viper.GetBool("Debug"),
+		Endpoint: viper.GetString("Endpoint"),
+		Secure:   viper.GetBool("Secure"),
+		Jwt:      viper.GetString("JWT_TOKEN"),
+	}
+	return conf
 }
 
-// GetDBConfig TOML設定ファイルからDB接続情報を取得
+// GetDBConfig DB接続情報を取得
 func GetDBConfig() DBConfig {
-	baseConfig := GetConfig()
-	return baseConfig.DB
+	conf := DBConfig{}
+
+	host := viper.GetString("DB_HOST")
+	user := viper.GetString("DB_USERNAME")
+	password := viper.GetString("DB_PASSWORD")
+	port := viper.GetString("DB_PORT")
+	conf.Server = host + ":" + port
+
+	if user != "" {
+		conf.Server = user + "@" + host + ":" + port
+	}
+	if user != "" && password != "" {
+		conf.Server = user + ":" + password + "@" + host + ":" + port
+	}
+	conf.Database = viper.GetString("DB_NAME")
+
+	return conf
 }
 
 func GetCacheConfig() CacheConfig {
-	baseConfig := GetConfig()
-	return baseConfig.Cache
+	host := viper.GetString("REDIS_HOST")
+	password := viper.GetString("REDIS_PASSWORD")
+	port := os.Getenv("REDIS_PORT")
+
+	conf := CacheConfig{}
+	conf.Server = "redis://" + host + "/" + port
+	if password != "" {
+		conf.Server = "redis://" + host + "/" + port + "?password=" + password
+	}
+	return conf
 }
 
 func GetUploadImagePath() string {
-	baseConfig := GetConfig().UploadImage
-	return baseConfig.Path
+	path := viper.GetString("IMAGE_UPLOAD_PATH")
+	return path
 }

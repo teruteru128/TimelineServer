@@ -30,7 +30,7 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 }
 
 func NewHandler() APIHandler {
-	logger := logger.GetLogger()
+	logger := logger.NewLogger()
 	conf := config.GetDBConfig()
 	cacheConf := config.GetCacheConfig()
 	mongoIns, err := db.NewMongoInstance(conf, cacheConf)

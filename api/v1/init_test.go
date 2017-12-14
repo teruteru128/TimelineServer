@@ -41,7 +41,7 @@ func TestMain(m *testing.M) {
 		if err != nil {
 			log.Fatalf("Could not getting mongo instance: %s", err)
 		}
-		logger := logger.GetLogger()
+		logger := logger.NewLogger()
 
 		th = &APIHandler{
 			db:     ins,

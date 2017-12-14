@@ -18,7 +18,7 @@ type MongoInstance struct {
 }
 
 func handleError(err error) error {
-	logger := logger.GetLogger()
+	logger := logger.NewLogger()
 	logger.Error("MongoDB Error", zap.String("Reason", err.Error()))
 	return err
 }
@@ -58,7 +58,7 @@ func NewMongoInstance(conf config.DBConfig, cacheConf config.CacheConfig) (*Mong
 	if err != nil {
 		return nil, err
 	}
-	logger := logger.GetLogger()
+	logger := logger.NewLogger()
 	m.logger = *logger
 
 	redisInstance := cache.NewRedisInstance(cacheConf)

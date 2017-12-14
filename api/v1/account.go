@@ -2,7 +2,6 @@ package v1
 
 import (
 	"net/http"
-	"strconv"
 
 	"gopkg.in/mgo.v2/bson"
 
@@ -289,13 +288,12 @@ func (h *APIHandler) UpdateAccountProfileImage(c echo.Context) error {
 	}
 
 	cfg := config.GetAPIConfig()
-	portStr := strconv.Itoa(cfg.Port)
 
 	var avatarURL string
 	if cfg.Secure {
-		avatarURL = "https://" + cfg.Endpoint + ":" + portStr + "/" + cfg.Version + "/" + filePath
+		avatarURL = "https://" + cfg.Endpoint + "/" + cfg.Version + "/" + filePath
 	} else {
-		avatarURL = "http://" + cfg.Endpoint + ":" + portStr + "/" + cfg.Version + "/" + filePath
+		avatarURL = "http://" + cfg.Endpoint + "/" + cfg.Version + "/" + filePath
 	}
 	err = h.db.UpdateUser(id, "avatarUrl", avatarURL)
 	if err != nil {

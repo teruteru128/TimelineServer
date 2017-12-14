@@ -33,8 +33,9 @@ func TestNormalGrantAccess(t *testing.T) {
 	req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %v", token))
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
+	cfg := config.GetAPIConfig()
 	err = middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey: []byte(config.MockJwtToken),
+		SigningKey: []byte(cfg.Jwt),
 	})(th.AUserSuspendHandler)(c)
 
 	if err == nil {
@@ -49,7 +50,7 @@ func TestNormalGrantAccess(t *testing.T) {
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
 	err = middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey: []byte(config.MockJwtToken),
+		SigningKey: []byte(cfg.Jwt),
 	})(th.ASetOfficialFlag)(c)
 
 	if err == nil {
@@ -85,8 +86,9 @@ func TestUserSuspendHandler(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
+	cfg := config.GetAPIConfig()
 	err = middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey: []byte(config.MockJwtToken),
+		SigningKey: []byte(cfg.Jwt),
 	})(th.AUserSuspendHandler)(c)
 
 	u, err = th.db.FindUserByOID(u.ID, true)
@@ -132,8 +134,9 @@ func TestSetOfficialFlagHandler(t *testing.T) {
 	req.Header.Set(echo.HeaderAuthorization, fmt.Sprintf("Bearer %v", token))
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
+	cfg := config.GetAPIConfig()
 	err = middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey: []byte(config.MockJwtToken),
+		SigningKey: []byte(cfg.Jwt),
 	})(th.ASetOfficialFlag)(c)
 
 	u, err = th.db.FindUserByOID(u.ID, true)
@@ -158,7 +161,7 @@ func TestSetOfficialFlagHandler(t *testing.T) {
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
 	err = middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey: []byte(config.MockJwtToken),
+		SigningKey: []byte(cfg.Jwt),
 	})(th.ASetOfficialFlag)(c)
 
 	if err == nil {

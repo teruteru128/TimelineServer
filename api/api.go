@@ -1,7 +1,7 @@
 package api
 
 import (
-	"strconv"
+	"os"
 
 	"github.com/TinyKitten/TimelineServer/api/v1"
 	"github.com/TinyKitten/TimelineServer/config"
@@ -19,7 +19,10 @@ func StartServer() {
 	r.Use(middleware.CORS())
 
 	apiConfig := config.GetAPIConfig()
-	port := strconv.Itoa(apiConfig.Port)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "5000"
+	}
 
 	host := ":" + port
 

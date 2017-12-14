@@ -2,23 +2,23 @@ package main
 
 import (
 	"log"
+	"os"
 	"runtime"
 
 	"github.com/TinyKitten/TimelineServer/api"
-	"github.com/TinyKitten/TimelineServer/config"
 )
 
 func main() {
-	debugMode := config.GetAPIConfig().Debug
+	f, _ := os.Create("./server.log")
+	defer f.Close()
+	log.SetOutput(f)
 
-	if !debugMode {
-		defer func() {
-			err := recover()
-			if err != nil {
-				log.Println("panick recover. ", err)
-			}
-		}()
-	}
+	defer func() {
+		err := recover()
+		if err != nil {
+			log.Println("panick recover. ", err)
+		}
+	}()
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 

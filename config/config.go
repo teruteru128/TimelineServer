@@ -45,15 +45,15 @@ func init() {
 	viper.SetDefault("JWT_TOKEN", "DEFAULT_JWT_TOKEN_CHANGE_ME")
 	viper.SetDefault("Secure", false)
 
-	viper.SetDefault("DB_HOST", "localhost")
-	viper.SetDefault("DB_USERNAME", "root")
+	viper.SetDefault("DB_HOST", "mongo")
+	viper.SetDefault("DB_USERNAME", "")
 	viper.SetDefault("DB_PASSWORD", "")
-	viper.SetDefault("DB_PORT", "3306")
+	viper.SetDefault("DB_PORT", 27017)
 	viper.SetDefault("DB_NAME", "timeline_dev")
 
 	viper.SetDefault("REDIS_HOST", "localhost")
 	viper.SetDefault("REDIS_PASSWORD", "")
-	viper.SetDefault("REDIS_PORT", "6379")
+	viper.SetDefault("REDIS_PORT", 6379)
 
 	viper.SetDefault("IMAGE_UPLOAD_PATH", "/uploads/img")
 
@@ -84,7 +84,14 @@ func GetDBConfig() DBConfig {
 	user := viper.GetString("DB_USERNAME")
 	password := viper.GetString("DB_PASSWORD")
 	port := viper.GetString("DB_PORT")
-	conf.Server = user + ":" + password + "@" + host + ":" + port
+	conf.Server = host + ":" + port
+
+	if user != "" {
+		conf.Server = user + "@" + host + ":" + port
+	}
+	if user != "" && password != "" {
+		conf.Server = user + ":" + password + "@" + host + ":" + port
+	}
 	conf.Database = viper.GetString("DB_NAME")
 
 	return conf

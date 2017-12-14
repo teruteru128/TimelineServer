@@ -16,7 +16,7 @@ func main() {
 	defer func() {
 		err := recover()
 		if err != nil {
-			log.Println("panick recover. ", err)
+			log.Println("panic recover. ", err)
 		}
 	}()
 

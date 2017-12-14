@@ -5,8 +5,8 @@ import (
 	"go.uber.org/zap"
 )
 
-// GetLogger Zapロガーのインスタンスを取得
-func GetLogger() *zap.Logger {
+// NewLogger Zapロガーのインスタンスを取得
+func NewLogger() *zap.Logger {
 	debug := config.GetAPIConfig().Debug
 	if debug {
 		logger, _ := zap.NewDevelopment()

@@ -42,7 +42,7 @@ func DecodeImage(str string) ([]byte, error) {
 
 	dat, err := base64.StdEncoding.DecodeString(trimed)
 	if err != nil {
-		logger := logger.GetLogger()
+		logger := logger.NewLogger()
 		logger.Debug("Base64 Error", zap.String("Error", err.Error()))
 		return nil, err
 	}

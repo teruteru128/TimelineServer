@@ -1,10 +1,7 @@
 package config
 
 import (
-	"flag"
 	"log"
-	"os"
-	"strconv"
 
 	"github.com/BurntSushi/toml"
 )
@@ -47,63 +44,9 @@ const (
 
 // GetConfig TOML設定ファイルから設定を取得
 func GetConfig() Config {
-	if flag.Lookup("test.v") != nil {
-		mockAPIConfig := APIConfig{
-			Port:     8080,
-			Version:  "1.0",
-			Debug:    true,
-			Endpoint: "tlstag.ddns.net",
-			Jwt:      MockJwtToken,
-			Secure:   false,
-		}
-		mockDBConfig := DBConfig{
-			Server:   "localhost:27017",
-			Database: "timeline",
-		}
-		mockCacheConfig := CacheConfig{
-			Server: "redis://localhost",
-		}
-		mockUploadImage := UploadImageConfig{
-			Path: "",
-		}
-		return Config{
-			API:         mockAPIConfig,
-			DB:          mockDBConfig,
-			Cache:       mockCacheConfig,
-			UploadImage: mockUploadImage,
-		}
-	}
-
 	var config Config
 	if _, err := toml.DecodeFile("config.toml", &config); err != nil {
 		log.Fatal(err)
-	}
-	if os.Getenv("ENV") == "heroku" {
-		port, _ := strconv.Atoi(os.Getenv("PORT"))
-		herokuAPIConfig := APIConfig{
-			Port:     port,
-			Version:  "1.0",
-			Debug:    false,
-			Endpoint: "kittentlapi.herokuapp.com",
-			Jwt:      os.Getenv("JWT_TOKEN"),
-			Secure:   false,
-		}
-		herokuDBConfig := DBConfig{
-			Server:   os.Getenv("MONGO_HOST"),
-			Database: os.Getenv("MONGO_DBNAME"),
-		}
-		herokuCacheConfig := CacheConfig{
-			Server: os.Getenv("REDIS_URL"),
-		}
-		herokuUploadImage := UploadImageConfig{
-			Path: "uploads/img/",
-		}
-		return Config{
-			API:         herokuAPIConfig,
-			DB:          herokuDBConfig,
-			Cache:       herokuCacheConfig,
-			UploadImage: herokuUploadImage,
-		}
 	}
 
 	return config

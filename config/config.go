@@ -103,9 +103,9 @@ func GetCacheConfig() CacheConfig {
 	port := os.Getenv("REDIS_PORT")
 
 	conf := CacheConfig{}
-	conf.Server = "redis://" + host + "/" + port
+	conf.Server = "redis://" + host + ":" + port
 	if password != "" {
-		conf.Server = "redis://" + host + "/" + port + "?password=" + password
+		conf.Server = "redis://" + host + ":" + port + "?password=" + password
 	}
 	return conf
 }
